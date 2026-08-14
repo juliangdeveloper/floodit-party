@@ -322,7 +322,8 @@ function aiTurn(){
     }
     pick=best;
   }
-  chooseColor(pick);
+  // llamar directo a processTurn (chooseColor filtra humanos)
+  processTurn(pick);
 }
 
 function cloneOwner(){return G.owner.map(r=>[...r])}
