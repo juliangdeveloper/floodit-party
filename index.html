@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flood-It Party</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f1a;--panel:#1a1a2e;--panel2:#16213e;--accent:#e94560;--text:#e8e8e8;--dim:#888;--cell-border:#2c3e50}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh;padding:16px}.screen.active{display:flex;flex-direction:column;align-items:center}
+#menu{justify-content:center;text-align:center}
+#menu h1{font-size:2.4em;margin-bottom:4px;background:linear-gradient(135deg,#e74c3c,#3498db,#2ecc71,#f1c40f,#9b59b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#menu .sub{color:var(--dim);margin-bottom:20px;font-size:.95em}
+.ms{background:var(--panel);border-radius:16px;padding:16px;margin:8px 0;max-width:500px;width:100%}
+.ms h3{color:var(--accent);margin-bottom:10px;font-size:.95em}
+.pr{display:flex;align-items:center;gap:6px;margin:5px 0;padding:7px;background:rgba(255,255,255,.04);border-radius:8px}
+.pr label{min-width:40px;font-weight:700;font-size:.9em}
+.pr input[type=text]{flex:1;padding:5px 8px;border-radius:6px;border:1px solid #333;background:#0d1b2a;color:#fff;min-width:0;font-size:.9em}
+.pr select{padding:5px;border-radius:6px;border:1px solid #333;background:#0d1b2a;color:#fff;font-size:.85em}
+.btn{padding:10px 28px;border:none;border-radius:10px;font-size:1em;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-p{background:linear-gradient(135deg,var(--accent),#d93a7a);color:#fff}
+.btn-p:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(233,69,96,.4)}
+.btn-s{background:#333;color:#fff}.btn-s:hover{background:#444}
+.btn-sm{padding:6px 14px;font-size:.8em}
+.bg{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+.cbtn{width:42px;height:42px;border-radius:50%;border:2px solid #444;background:transparent;color:#fff;font-size:1.1em;cursor:pointer;transition:all .2s}
+.cbtn.on{border-color:var(--accent);background:var(--accent)}
+.pcb{display:flex;gap:6px;justify-content:center;margin:8px 0;flex-wrap:wrap}
+.pcb label{font-size:.85em;color:var(--dim);cursor:pointer;padding:4px 10px;border-radius:8px;border:2px solid #333;transition:all .2s}
+.pcb label:has(input:checked){border-color:var(--accent);background:rgba(233,69,96,.15)}
+.pcb input{display:none}
+
+/* GAME */
+#game{padding:8px;width:100%}
+.g-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;padding:0 4px;margin-bottom:6px}
+.round-badge{background:var(--panel2);padding:6px 14px;border-radius:12px;font-weight:700;font-size:1em}
+.turn-badge{padding:6px 16px;border-radius:10px;font-weight:700;font-size:1em;transition:all .3s}
+
+/* BOARD */
+.board-wrap{display:flex;justify-content:center;margin:8px 0;overflow-x:auto}
+.board{display:grid;gap:1px;background:var(--cell-border);border-radius:8px;padding:2px;touch-action:manipulation}
+.cell{width:30px;height:30px;border-radius:4px;transition:all .15s;position:relative;display:flex;align-items:center;justify-content:center}
+.cell.newcap{animation:newCap .4s ease-out}
+@keyframes newCap{0%{transform:scale(.6);filter:brightness(3)}60%{transform:scale(1.15);filter:brightness(1.6)}100%{transform:scale(1);filter:brightness(1)}}
+.corner{outline:3px solid rgba(255,255,255,.85);outline-offset:-1px;z-index:3}
+
+/* COLOR PICKER */
+.picker{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
+.pbtn{width:44px;height:44px;border-radius:50%;border:3px solid #333;cursor:pointer;transition:all .15s}
+.pbtn:hover{transform:scale(1.15);border-color:#fff}
+.pbtn:disabled{opacity:.35;cursor:default;transform:none;border-color:#333}
+
+/* PLAYERS */
+.player-bar{display:flex;gap:8px;justify-content:center;margin:6px 0;flex-wrap:wrap}
+.pb{padding:6px 14px;border-radius:10px;font-weight:700;font-size:.85em;border:2px solid transparent;transition:all .3s;opacity:.55}
+.pb.current{opacity:1;transform:scale(1.1);box-shadow:0 0 12px rgba(255,255,255,.15)}
+.pb .pb-score{margin-left:6px;font-size:.95em}
+.pb .pct{display:block;font-size:.68em;font-weight:600;opacity:.8}
+
+/* SCORE POP */
+.score-pop{position:fixed;pointer-events:none;font-size:1.5em;font-weight:900;z-index:100;text-shadow:0 2px 8px rgba(0,0,0,.8);animation:popUp .8s ease-out forwards}
+@keyframes popUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-50px) scale(1.4)}}
+
+.msg{background:rgba(233,69,96,.12);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;text-align:center;font-weight:600;font-size:.9em;margin-top:8px;max-width:700px;width:100%}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.overlay-card{background:var(--panel);border-radius:20px;padding:24px;max-width:520px;width:100%;text-align:center;border:2px solid var(--accent);max-height:85vh;overflow-y:auto}
+.overlay-card h2{font-size:1.2em;margin-bottom:8px}
+.overlay-card p{margin:8px 0;line-height:1.5;font-size:.9em}
+.overlay-card .paper-box{background:var(--panel2);border-radius:12px;padding:14px;margin:10px 0;text-align:left;font-size:.85em;line-height:1.6;border-left:3px solid var(--accent)}
+.overlay-card .theorem{background:rgba(233,69,96,.1);border-left:3px solid var(--accent);padding:10px;margin:8px 0;font-size:.85em;border-radius:0 8px 8px 0;font-style:italic}
+.overlay-card ul{text-align:left;padding-left:20px;margin:8px 0;font-size:.9em;line-height:1.7}
+
+/* END */
+#end{text-align:center;padding-top:20px}
+#end h1{font-size:2.2em;margin-bottom:8px;background:linear-gradient(135deg,#e74c3c,#3498db,#2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.end-rank{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border-radius:12px;margin:5px 0;max-width:450px}
+.end-rank.w{border:2px solid #f5a623}
+.er-pos{font-size:1.4em;width:36px}
+.er-name{flex:1;text-align:left;font-weight:600}
+.er-score{font-weight:700;color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div id="menu" class="screen active">
+  <h1>🌊 Flood-It Party</h1>
+  <p class="sub">Inunda tu esquina · Captura territorio · ¡Conquista el tablero!</p>
+  <div class="ms">
+    <h3>Jugadores</h3>
+    <div class="pcb"><button class="cbtn on" onclick="setPC(2)">2</button><button class="cbtn" onclick="setPC(3)">3</button><button class="cbtn" onclick="setPC(4)">4</button></div>
+    <div id="pSetup"></div>
+  </div>
+  <div class="ms">
+    <h3>Colores (dificultad)</h3>
+    <div class="pcb">
+      <label><input type="radio" name="col" value="4"> 4</label>
+      <label><input type="radio" name="col" value="5" checked> 5</label>
+      <label><input type="radio" name="col" value="6"> 6</label>
+    </div>
+  </div>
+  <div class="ms">
+    <h3>Tablero</h3>
+    <div class="pcb">
+      <label><input type="radio" name="bsz" value="small"> Pequeño (10×8)</label>
+      <label><input type="radio" name="bsz" value="med" checked> Mediano (14×11)</label>
+      <label><input type="radio" name="bsz" value="big"> Grande (18×14)</label>
+    </div>
+  </div>
+  <div class="bg">
+    <button class="btn btn-p" onclick="startG()">🎲 Jugar</button>
+    <button class="btn btn-s" onclick="showAbout()">📄 El Paper</button>
+    <button class="btn btn-s" onclick="showRules()">📜 Reglas</button>
+  </div>
+</div>
+
+<div id="game" class="screen">
+  <div class="g-top">
+    <div class="round-badge" id="turnCount">Turno 1</div>
+    <div class="turn-badge" id="turnBadge">Turno</div>
+    <div style="display:flex;gap:4px">
+      <button class="btn btn-s btn-sm" onclick="showAbout()">📄</button>
+      <button class="btn btn-s btn-sm" onclick="showRules()">📜</button>
+    </div>
+  </div>
+  <div class="player-bar" id="playerBar"></div>
+  <div class="board-wrap"><div class="board" id="board"></div></div>
+  <div class="picker" id="picker"></div>
+  <div class="msg" id="msg">Preparando...</div>
+</div>
+
+<div id="end" class="screen">
+  <h1>🏆 ¡Territorio Conquistado!</h1>
+  <div id="endRank"></div>
+  <div class="bg">
+    <button class="btn btn-p" onclick="showS('menu')">🏠 Menú</button>
+    <button class="btn btn-s" onclick="startG()">🔄 Revancha</button>
+  </div>
+</div>
+
+<div class="overlay" id="rulesOv"><div class="overlay-card" id="rulesCard"></div></div>
+<div class="overlay" id="aboutOv"><div class="overlay-card" id="aboutCard"></div></div>
+
+<script>
+// Tablero base (no cambia); owner[r][c] = índice de jugador o -1 si libre
+const PALETTE=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
+const COLOR_NAMES=['Rojo','Azul','Verde','Amarillo','Morado','Naranja'];
+const PCOL=['#2dd4bf','#f97316','#ec4899','#84cc16'];
+const CORNERS=[[0,0],[-1,-1],[0,-1],[-1,0]]; // según nº jugadores se toman las primeras
+
+let G={grid:[],owner:[],rows:11,cols:14,colors:5,players:[],curP:0,turns:0,animating:false,over:false,stall:0};
+
+// ===================== SETUP =====================
+function setPC(n){document.querySelectorAll('#menu .cbtn').forEach((b,i)=>b.classList.toggle('on',i===n-2));renderPS(n)}
+function renderPS(n){let h='';for(let i=0;i<n;i++)h+=`<div class="pr"><label style="color:${PCOL[i]}">P${i+1}</label><input type="text" id="pn${i}" placeholder="Jugador ${i+1}" maxlength="10"><select id="pt${i}"><option value="human">Humano</option><option value="easy">IA Fácil</option><option value="medium">IA Media</option><option value="hard">IA Difícil</option></select></div>`;document.getElementById('pSetup').innerHTML=h}
+function getPC(){const a=document.querySelector('#menu .cbtn.on');return a?parseInt(a.textContent):2}
+function getCol(){return parseInt(document.querySelector('input[name=col]:checked')?.value||5)}
+function getBoardSize(){const v=document.querySelector('input[name=bsz]:checked')?.value||'med';return v==='small'?{c:10,r:8}:v==='big'?{c:18,r:14}:{c:14,r:11}}
+
+// ===================== START =====================
+function startG(){
+  const n=getPC();const bs=getBoardSize();
+  G.cols=bs.c;G.rows=bs.r;G.colors=getCol();G.turns=0;G.over=false;G.animating=false;G.stall=0;
+  G.players=[];
+  for(let i=0;i<n;i++){
+    const nm=document.getElementById(`pn${i}`)?.value.trim()||`Jugador ${i+1}`;
+    const tp=document.getElementById(`pt${i}`)?.value||'human';
+    G.players.push({name:nm,type:tp,color:PCOL[i],terr:0,big:0});
+  }
+  generateBoard();
+  G.curP=0;
+  renderAll();
+  startTurn();
+  showS('game');
+}
+
+function generateBoard(){
+  G.grid=[];G.owner=[];
+  for(let r=0;r<G.rows;r++){
+    G.grid[r]=[];G.owner[r]=[];
+    for(let c=0;c<G.cols;c++){
+      G.grid[r][c]=Math.floor(Math.random()*G.colors);
+      G.owner[r][c]=-1;
+    }
+  }
+  // esquinas de cada jugador
+  const cn=['tl','br','tr','bl'];
+  for(let i=0;i<G.players.length;i++){
+    const [rr,cc]=corner(i);
+    G.owner[rr][cc]=i;
+  }
+}
+function corner(i){
+  const n=G.players.length;
+  if(n===2)return i===0?[0,0]:[G.rows-1,G.cols-1];
+  if(n===3)return i===0?[0,0]:i===1?[G.rows-1,G.cols-1]:[0,G.cols-1];
+  return i===0?[0,0]:i===1?[G.rows-1,G.cols-1]:i===2?[0,G.cols-1]:[G.rows-1,0];
+}
+
+// ===================== CORE: FLOOD CAPTURE =====================
+// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n}
+function doCapture(owner,p,color){
+  const captured=[];
+  const visited=new Set();
+  const frontier=[];
+  // sembrar desde el territorio actual del jugador
+  for(let r=0;r<G.rows;r++){
+    for(let c=0;c<G.cols;c++){
+      if(owner[r][c]!==p)continue;
+      for(const[nr,nc]of nbors(r,c)){
+        const key=nr*1000+nc;
+        if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
+        visited.add(key);frontier.push([nr,nc]);
+      }
+    }
+  }
+  while(frontier.length){
+    const [r,c]=frontier.pop();
+    captured.push([r,c]);
+    owner[r][c]=p;
+    for(const[nr,nc]of nbors(r,c)){
+      const key=nr*1000+nc;
+      if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
+      visited.add(key);frontier.push([nr,nc]);
+    }
+  }
+  return {list:captured,n:captured.length};
+}
+function nbors(r,c){
+  const a=[];
+  if(r>0)a.push([r-1,c]);
+  if(r<G.rows-1)a.push([r+1,c]);
+  if(c>0)a.push([r,c-1]);
+  if(c<G.cols-1)a.push([r,c+1]);
+  return a;
+}
+
+// ===================== TURN =====================
+function startTurn(){
+  if(G.over)return;
+  const p=G.players[G.curP];
+  updateTerritory();
+  renderPicker(p);
+  setMsg(`🎯 ${p.name}: elige un color para inundar`);
+  if(p.type!=='human')setTimeout(aiTurn,600);
+}
+
+function chooseColor(color){
+  if(G.animating||G.over)return;
+  const p=G.players[G.curP];
+  if(p.type!=='human')return;
+  processTurn(color);
+}
+
+async function processTurn(color){
+  G.animating=true;
+  const p=G.curP;
+  const res=doCapture(G.owner,p,color);
+  G.turns++;
+  // animación
+  const gained=[];
+  for(const[r,c]of res.list){
+    const el=q(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if(el){el.classList.add('newcap');gained.push(el)}
+  }
+  renderPlayerBar();
+  updateTerritory();
+  if(res.n>0){
+    const p2=G.players[p];
+    if(res.n>p2.big)p2.big=res.n;
+    showScorePop(res.list[0],res.n,G.players[p].color);
+    setMsg(`🌊 +${res.n} casillas para ${G.players[p].name} (${COLOR_NAMES[color]})`);
+  }else{
+    setMsg(`💨 ${G.players[p].name} eligió ${COLOR_NAMES[color]} pero no capturó nada`);
+  }
+  await sleep(700);
+  const still=G.players[G.curP].type==='human'?true:true;
+  // avanzar / terminar
+  if(res.n===0){G.stall++}else{G.stall=0}
+  const unclaimed=countUnclaimed();
+  G.curP=(G.curP+1)%G.players.length;
+  G.animating=false;
+  if(unclaimed===0||G.stall>=G.players.length){endGame();return}
+  renderAll();
+  startTurn();
+}
+
+function countUnclaimed(){let n=0;for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]===-1)n++;return n}
+function updateTerritory(){
+  G.players.forEach(p=>p.terr=0);
+  for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]>=0)G.players[G.owner[r][c]].terr++;
+}
+
+// ===================== AI =====================
+function aiTurn(){
+  const pType=G.players[G.curP].type;
+  const colors=[...Array(G.colors).keys()];
+  let pick;
+  if(pType==='easy'){
+    pick=colors[Math.floor(Math.random()*colors.length)];
+  }else if(pType==='medium'){
+    // codicioso: color que captura más
+    let best=-1,bestN=-1;
+    for(const c of colors){
+      const o=cloneOwner();const n=doCapture(o,G.curP,c).n;
+      if(n>bestN){bestN=n;best=c}
+    }
+    pick=best;
+  }else{
+    // difícil: lookahead 1 (yo + mejor respuesta mía siguiente)
+    let best=-1,bestVal=-Infinity;
+    for(const c of colors){
+      const o=cloneOwner();const n1=doCapture(o,G.curP,c).n;
+      // mejor segunda jugada desde ese estado
+      let n2=0;
+      for(const c2 of colors){const oo=cloneOf(o);const nn=doCapture(oo,G.curP,c2).n;if(nn>n2)n2=nn}
+      const val=n1+0.6*n2;
+      if(val>bestVal){bestVal=val;best=c}
+    }
+    pick=best;
+  }
+  chooseColor(pick);
+}
+
+function cloneOwner(){return G.owner.map(r=>[...r])}
+function cloneOf(o){return o.map(r=>[...r])}
+
+// ===================== RENDER =====================
+function renderAll(){
+  renderBoard();renderPlayerBar();renderTurnBadge();
+  document.getElementById('turnCount').textContent=`Turno ${G.turns+1}`;
+}
+function renderBoard(){
+  const board=document.getElementById('board');
+  board.style.gridTemplateColumns=`repeat(${G.cols},30px)`;
+  let html='';
+  for(let r=0;r<G.rows;r++){
+    for(let c=0;c<G.cols;c++){
+      const own=G.owner[r][c];
+      const bg=own>=0?PCOL[own]:PALETTE[G.grid[r][c]];
+      const cornerCls=own>=0&&isCorner(r,c,own)?' corner':'';
+      html+=`<div class="cell${cornerCls}" data-r="${r}" data-c="${c}" style="background:${bg}"></div>`;
+    }
+  }
+  board.innerHTML=html;
+}
+function isCorner(r,c,p){
+  const[nr,nc]=corner(p);
+  return r===nr&&c===nc;
+}
+function renderPicker(p){
+  const pick=document.getElementById('picker');
+  let html='';
+  for(let c=0;c<G.colors;c++){
+    const disabled=p.type!=='human';
+    html+=`<button class="pbtn" style="background:${PALETTE[c]}" onclick="chooseColor(${c})" ${disabled?'disabled':''} title="${COLOR_NAMES[c]}"></button>`;
+  }
+  pick.innerHTML=html;
+}
+function renderPlayerBar(){
+  const bar=document.getElementById('playerBar');
+  const total=G.rows*G.cols;
+  bar.innerHTML=G.players.map((p,i)=>{
+    const isCur=i===G.curP&&!G.over;
+    const pct=Math.round(p.terr/total*100);
+    return`<div class="pb ${isCur?'current':''}" style="color:${p.color};border-color:${p.color};background:${isCur?p.color+'22':'transparent'}">${p.name}<span class="pb-score">${p.terr}</span><span class="pct">${pct}%</span></div>`;
+  }).join('');
+}
+function renderTurnBadge(){
+  const p=G.players[G.curP];
+  const tb=document.getElementById('turnBadge');
+  tb.textContent=`Turno: ${p.name}`;
+  tb.style.color=p.color;
+  tb.style.background=p.color+'22';
+  tb.style.border=`2px solid ${p.color}`;
+}
+function showScorePop(cell,n,color){
+  const el=q(`.cell[data-r="${cell[0]}"][data-c="${cell[1]}"]`);
+  if(!el)return;
+  const rect=el.getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.className='score-pop';
+  pop.textContent=`+${n}`;
+  pop.style.left=rect.left+rect.width/2-20+'px';
+  pop.style.top=rect.top+'px';
+  pop.style.color=color;
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(),800);
+}
+
+// ===================== END =====================
+function endGame(){
+  G.over=true;showS('end');
+  updateTerritory();
+  const sorted=[...G.players].sort((a,b)=>b.terr!==a.terr?b.terr-a.terr:b.big-a.big);
+  const medals=['🥇','🥈','🥉','4️⃣'];
+  document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.terr} casillas (${Math.round(p.terr/(G.rows*G.cols)*100)}%)</span><div style="font-size:.7em;color:var(--dim)">Mejor jugada:+${p.big}</div></div>`).join('');
+}
+
+// ===================== ABOUT / RULES =====================
+function showAbout(){
+  document.getElementById('aboutCard').innerHTML=`
+    <h2>📄 El Paper Científico</h2>
+    <div class="paper-box">
+      <strong>"The Complexity of Flood Filling Games"</strong><br>
+      Raphaël Clifford, Markus Jalsenius, Ashley Montanaro, Benjamin Sach<br>
+      <em>University of Bristol, 2010</em><br>
+      <a href="https://arxiv.org/abs/1001.4420" target="_blank" style="color:var(--accent)">arXiv:1001.4420</a>
+    </div>
+
+    <h3 style="color:var(--accent);margin:12px 0 6px">🚰 ¿Qué es Flood-It?</h3>
+    <p>Juego de puzzle clásico: en un tablero de casillas de colores, eliges un color y tu <strong>inundación</strong> (desde una esquina) se expande capturando todas las casillas conectadas de ese color. El reto: inundar todo el tablero en la menor cantidad de movimientos posible.</p>
+
+    <div class="theorem">
+      <strong>Resultado principal:</strong> Flood-It y Free-Flood-It son <strong>NP-duros</strong> en tableros n×n con al menos 3 colores. No existe algoritmo eficiente que siempre encuentre la secuencia de movimientos óptima — cada tablero es un rompecabezas genuino.
+    </div>
+
+    <h3 style="color:var(--accent);margin:12px 0 6px">🎮 ¿Por qué es interesante?</h3>
+    <p>El paper demuestra que <strong>no hay "truco" definitivo</strong>: aunque el tablero se vea simple, la mejor estrategia requiere explorar combinaciones de colores imposibles de calcular a mano. Eso convierte cada partida en un desafío fresco y estratégico.</p>
+    <p>La comunidad matemática (Meeks, Scott, Fleischer, Woeginger…) sigue estudiando variantes. Nuestra versión <strong>Party</strong> lo vuelve competitivo: cada jugador inunda desde su propia esquina y compiten por territorio.</p>
+
+    <h3 style="color:var(--accent);margin:12px 0 6px">🧠 La estrategia del criterio</h3>
+    <p>En vez de inundar casillas ya capturadas, elige colores que <strong>expandan tu frontera hacia zonas ricas</strong>. Un buen criterio: priorizar el color que captura la región contigua más grande, y planear 2 jugadas para no quedar encerrado por el rival.</p>
+
+    <div class="paper-box" style="border-left-color:#e67e22">
+      <strong>Referencia completa:</strong><br>
+      Clifford, R., Jalsenius, M., Montanaro, A., & Sach, B. (2012). "The Complexity of Flood Filling Games." <em>Theory of Computing Systems</em>, 50(1), 72–92. arXiv:1001.4420.
+    </div>
+    <button class="btn btn-p" onclick="document.getElementById('aboutOv').classList.remove('show')" style="margin-top:12px">Entendido</button>`;
+  document.getElementById('aboutOv').classList.add('show');
+}
+
+function showRules(){
+  document.getElementById('rulesCard').innerHTML=`
+    <h2>📜 Reglas de Flood-It Party</h2>
+    <p><strong>Objetivo:</strong> ¡Captura más casillas que tus rivales!</p>
+    <p><strong>Tablero:</strong> Tablero compartido de casillas de colores.</p>
+    <p><strong>Tu esquina:</strong> Cada jugador empieza inundando desde una esquina del tablero.</p>
+    <p><strong>En tu turno:</strong></p>
+    <ul>
+      <li>Elige uno de los <strong>colores</strong> del botón inferior</li>
+      <li>Tu inundación se expande capturando todas las casillas <strong>libres</strong> de ese color <strong>conectadas</strong> a tu territorio (incluyendo cadenas)</li>
+      <li>Las casillas capturadas cambian a <strong>tu color</strong></li>
+      <li>Si eliges un color sin casillas libres conectadas: pierdes el turno (¡cuenta como parada!)</li>
+    </ul>
+    <p><strong>Fin del juego:</strong> Cuando no quedan casillas libres (o nadie puede capturar).</p>
+    <p><strong>Victoria:</strong> Quien capture <strong>más casillas</strong> gana. En empate, gana la mejor jugada única más grande.</p>
+    <p><strong>Tip:</strong> Cuando dos inundaciones rivales se encuentran, pelean por las casillas restantes. ¡Captura zonas grandes y no dejes pasillos para el enemigo!</p>
+    <button class="btn btn-p" onclick="document.getElementById('rulesOv').classList.remove('show')" style="margin-top:12px">Entendido</button>`;
+  document.getElementById('rulesOv').classList.add('show');
+}
+
+// ===================== UI =====================
+function showS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function setMsg(m){document.getElementById('msg').textContent=m}
+function q(s){return document.querySelector(s)}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+renderPS(2);
+</script>
+</body>
+</html>
