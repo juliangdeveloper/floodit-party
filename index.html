@@ -6,7 +6,7 @@
 <title>Flood-It Party</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0f0f1a;--panel:#1a1a2e;--panel2:#16213e;--accent:#e94560;--text:#e8e8e8;--dim:#888;--cell-border:#2c3e50}
+:root{--bg:#0f0f1a;--panel:#1a1a2e;--panel2:#16213e;--accent:#e94560;--text:#e8e8e8;--dim:#888;--cell-border:#2c3e50;--cell-size:30px}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 .screen{display:none;min-height:100vh;padding:16px}.screen.active{display:flex;flex-direction:column;align-items:center}
 #menu{justify-content:center;text-align:center}
@@ -102,7 +102,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 /* COLOR PICKER */
 .picker{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
 .pbtn{width:44px;height:44px;border-radius:50%;border:3px solid #333;cursor:pointer;transition:all .15s}
-.pbtn:hover{transform:scale(1.15);border-color:#fff}
+.pbtn:hover:not(:disabled){transform:scale(1.25);border-color:#fff;box-shadow:0 0 14px rgba(255,255,255,.3)}
 .pbtn:disabled{opacity:.35;cursor:default;transform:none;border-color:#333}
 
 /* PLAYERS */
@@ -137,6 +137,72 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .er-pos{font-size:1.4em;width:36px}
 .er-name{flex:1;text-align:left;font-weight:600}
 .er-score{font-weight:700;color:var(--accent)}
+
+/* ===== TITLE SHIMMER ===== */
+#menu h1{
+  background-size:200% 200%;
+  animation:shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* ===== BUTTON HOVER ENHANCED ===== */
+.btn{transition:all .25s cubic-bezier(.4,0,.2,1)}
+.btn-p:hover{transform:scale(1.07);box-shadow:0 6px 24px rgba(233,69,96,.5);filter:brightness(1.12)}
+.btn-s:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,.3);background:#4a4a5a}
+
+/* ===== MESSAGE BAR AUTO-HIDE ===== */
+.msg{transition:opacity .5s ease-out}
+.msg.fade-out{opacity:0}
+
+/* ===== ROUND/TURN PULSE ===== */
+.round-badge{animation:roundPulse 2s ease-in-out infinite}
+.turn-badge{animation:turnPulse 2.5s ease-in-out infinite}
+@keyframes roundPulse{0%,100%{box-shadow:0 0 0 rgba(233,69,96,0)}50%{box-shadow:0 0 12px rgba(233,69,96,.25)}}
+@keyframes turnPulse{0%,100%{box-shadow:0 0 0 rgba(255,255,255,0)}50%{box-shadow:0 0 10px rgba(255,255,255,.15)}}
+
+/* ===== CONFETTI ===== */
+.confetti{position:fixed;pointer-events:none;z-index:200;width:10px;height:10px;border-radius:2px;animation:confettiFall 3.5s ease-out forwards}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}
+  80%{opacity:1}
+  100%{opacity:0;transform:translateY(100vh) rotate(720deg) scale(.3)}
+}
+
+/* ===== END SCREEN ENHANCED ===== */
+#winner-crown{font-size:4em;animation:crownBounce 1.2s ease-in-out infinite alternate;filter:drop-shadow(0 0 20px rgba(245,166,35,.6))}
+@keyframes crownBounce{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-8px) scale(1.05)}}
+.end-rank{transition:all .3s}
+.end-rank:hover{transform:translateX(6px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.end-score-breakdown{font-size:.75em;color:var(--dim);margin-top:2px}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media(max-width:480px){
+  :root{--cell-size:24px}
+  .cell{width:24px!important;height:24px!important}
+  .cell .pu-icon{font-size:9px}
+  .cell.wall::after{font-size:8px}
+  .explosion{width:24px!important;height:24px!important}
+  .pbtn{width:48px!important;height:48px!important}
+  #menu .ms{padding:12px;max-width:100%}
+  #menu h1{font-size:1.8em}
+  .btn{padding:8px 20px;font-size:.9em}
+  .bg{gap:6px}
+  .board-wrap{justify-content:flex-start;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+  .g-top{flex-wrap:wrap;gap:4px}
+  .round-badge,.turn-badge{font-size:.85em;padding:4px 10px}
+  .picker{gap:6px}
+  .player-bar{gap:4px}
+  .pb{padding:4px 10px;font-size:.78em}
+  .msg{font-size:.8em;padding:6px 12px}
+  .overlay-card{padding:16px;max-width:95vw}
+  #end h1{font-size:1.6em}
+  .end-rank{padding:8px 10px;font-size:.85em}
+  #winner-crown{font-size:2.8em}
+}
 </style>
 </head>
 <body>
@@ -204,8 +270,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <div id="end" class="screen">
+  <div id="winner-crown">👑</div>
   <h1>🏆 ¡Territorio Conquistado!</h1>
   <div id="endRank"></div>
+  <div id="confettiContainer"></div>
   <div class="bg">
     <button class="btn btn-p" onclick="showS('menu')">🏠 Menú</button>
     <button class="btn btn-s" onclick="startG()">🔄 Revancha</button>
@@ -770,7 +838,8 @@ function renderAll(){
 
 function renderBoard(){
   const board=document.getElementById('board');
-  board.style.gridTemplateColumns=`repeat(${G.cols},30px)`;
+  const cellSize=getComputedStyle(document.documentElement).getPropertyValue('--cell-size').trim()||'30px';
+  board.style.gridTemplateColumns=`repeat(${G.cols},${cellSize})`;
   let html='';
   for(let r=0;r<G.rows;r++){
     for(let c=0;c<G.cols;c++){
@@ -873,7 +942,10 @@ function endGame(){
   const sorted=[...G.players].sort((a,b)=>b.totalCaptured!==a.totalCaptured?b.totalCaptured-a.totalCaptured:b.big-a.big);
   const medals=['🥇','🥈','🥉','4️⃣'];
   const playable=countPlayable();
-  document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.totalCaptured} casillas (${Math.round(p.totalCaptured/playable*100)}%)</span><div style="font-size:.7em;color:var(--dim)">Mejor jugada:+${p.big}</div></div>`).join('');
+  document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.totalCaptured} casillas (${Math.round(p.totalCaptured/playable*100)}%)</span><div class="end-score-breakdown">Mejor jugada: +${p.big} · Capturas: ${p.totalCaptured}</div></div>`).join('');
+
+  // Spawn confetti
+  spawnConfetti();
 }
 
 // ===================== ABOUT / RULES =====================
@@ -944,9 +1016,34 @@ function showRules(){
 
 // ===================== UI =====================
 function showS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function setMsg(m){document.getElementById('msg').textContent=m}
+let _msgTimer=null;
+function setMsg(m){
+  const el=document.getElementById('msg');
+  el.textContent=m;
+  el.classList.remove('fade-out');
+  clearTimeout(_msgTimer);
+  _msgTimer=setTimeout(()=>{el.classList.add('fade-out')},2500);
+}
 function q(s){return document.querySelector(s)}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+// ===================== CONFETTI =====================
+function spawnConfetti(){
+  const colors=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#ff69b4','#00ced1'];
+  for(let i=0;i<30;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=(Math.random()*100)+'vw';
+    c.style.top=(-10-Math.random()*20)+'px';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.width=(6+Math.random()*8)+'px';
+    c.style.height=(6+Math.random()*8)+'px';
+    c.style.animationDelay=(Math.random()*2)+'s';
+    c.style.animationDuration=(2.5+Math.random()*2)+'s';
+    document.getElementById('confettiContainer').appendChild(c);
+    setTimeout(()=>c.remove(),5000);
+  }
+}
 renderPS(2);
 </script>
 </body>
