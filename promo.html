@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0f0f1a;width:1080px;height:1920px;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;color:#e8e8e8;position:relative}
+/* fondos de tiles flotantes */
+.tiles{position:absolute;inset:0;overflow:hidden;opacity:.25}
+.tile{position:absolute;border-radius:14px;opacity:.0;animation:floatIn 2.5s ease forwards}
+@keyframes floatIn{0%{opacity:0;transform:translateY(60px) rotate(0)}100%{opacity:.9;transform:translateY(0) rotate(8deg)}}
+.sec{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;text-align:center;opacity:0;transition:opacity .7s ease;pointer-events:none}
+.sec.on{opacity:1}
+.logo{width:110px;height:110px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:60px;background:linear-gradient(135deg,#0f0f1a,#16213e);border:3px solid #e94560;margin-bottom:30px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+h1{font-size:128px;font-weight:900;margin-bottom:10px;background:linear-gradient(135deg,#e74c3c,#3498db,#2ecc71,#f1c40f,#9b59b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.05}
+.sub{font-size:46px;color:#aaa;font-weight:600}
+.play-badge{font-size:40px;background:#e94560;padding:18px 40px;border-radius:50px;margin-top:46px;font-weight:800;box-shadow:0 10px 40px rgba(233,69,96,.5)}
+
+/* demo */
+#demo{width:880px;height:640px;background:#16213e;border-radius:26px;border:2px solid #2c3e50;padding:20px;display:flex;flex-direction:column;align-items:center}
+#demo canvas{width:820px;height:520px;border-radius:16px}
+.demo-lab{font-size:34px;color:#ddd;margin-top:8px;font-weight:700}
+.sec h2{font-size:92px;font-weight:900;margin-bottom:50px;line-height:1.1}
+.sec .big{font-size:52px;color:#ccc;line-height:1.4;max-width:860px}
+.card{background:#1a1a2e;border:2px solid #2c3e50;border-radius:26px;padding:40px 50px;margin:14px 0;width:880px;display:flex;align-items:center;gap:34px;text-align:left;opacity:0;transform:translateX(60px);transition:all .7s ease}
+.card.on{opacity:1;transform:translateX(0)}
+.card .ic{font-size:70px}
+.card .bt{font-size:52px;font-weight:800}
+.card .bd{font-size:34px;color:#bbb;margin-top:6px}
+.sci{font-size:42px;color:#ccc;line-height:1.5;max-width:860px}
+.sci b{color:#f1c40f}
+.cta{font-size:110px;font-weight:900;background:linear-gradient(135deg,#e94560,#d93a7a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px}
+.url{font-size:44px;color:#6fd;font-weight:700;background:#0d1b2a;padding:24px 44px;border-radius:18px;border:2px solid #2c3e50}
+.foot{position:absolute;bottom:40px;width:100%;text-align:center;font-size:30px;color:#666}
+</style>
+</head>
+<body>
+<div class="tiles" id="tiles"></div>
+
+<!-- 1: Título -->
+<div class="sec on" id="s1">
+  <div class="logo">🌊</div>
+  <h1>Flood-It<br>Party</h1>
+  <div class="sub">Inunda · Conquista · Gana</div>
+  <div class="play-badge">🎮 Juego Party de Estrategia</div>
+</div>
+
+<!-- 2: Demo en vivo -->
+<div class="sec" id="s2">
+  <h2 style="color:#e94560">¿Cómo se juega?</h2>
+  <div id="demo"><canvas id="cv" width="820" height="520"></canvas><div class="demo-lab">🌊 Elige un color y tu inundación captura territorio</div></div>
+</div>
+
+<!-- 3: Features -->
+<div class="sec" id="s3">
+  <h2>Todo lo que esconde</h2>
+  <div class="card" id="c1"><div class="ic">🌊</div><div><div class="bt">Inundaciones en cadena</div><div class="bd">Captura regiones enteras de un color conectadas a tu territorio</div></div></div>
+  <div class="card" id="c2"><div class="ic">🏆</div><div><div class="bt">Guerra de territorio</div><div class="bd">Hasta 4 jugadores compiten desde sus esquinas por el tablero</div></div></div>
+  <div class="card" id="c3"><div class="ic">🧠</div><div><div class="bt">IA en 3 niveles</div><div class="bd">Fácil, Media y Difícil (con lookahead estratégico)</div></div></div>
+</div>
+
+<!-- 4: Ciencia -->
+<div class="sec" id="s4">
+  <h2 style="color:#f1c40f">Basado en investigación real</h2>
+  <div class="sci">
+    <div style="font-size:120px;margin-bottom:30px">📄</div>
+    El paper <b>"The Complexity of Flood Filling Games"</b> (Clifford, Jalsenius, Montanaro & Sach) demuestra que Flood-It es <b>NP-duro</b>.<br><br>
+    ✨ No existe truco que siempre gane → <b>cada partida es un reto genuino</b>.
+  </div>
+</div>
+
+<!-- 5: CTA -->
+<div class="sec" id="s5">
+  <div class="cta">¡Juega gratis!</div>
+  <div class="url">juliangdeveloper.github.io/<br>floodit-party</div>
+  <div class="foot">Hecho con HyperFrames · pipelone de paper → juego</div>
+</div>
+
+<script>
+// ==== tiles de fondo flotantes ====
+(function(){
+  const pal=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
+  const tc=document.getElementById('tiles');
+  for(let i=0;i<22;i++){
+    const d=document.createElement('div');
+    d.className='tile';
+    const s=80+Math.random()*160;
+    d.style.width=s+'px';d.style.height=s+'px';
+    d.style.left=(Math.random()*100)+'%';d.style.top=(Math.random()*100)+'%';
+    d.style.background=pal[i%pal.length];
+    d.style.animationDelay=(Math.random()*3)+'s';
+    d.style.animationDuration=(1.5+Math.random()*2)+'s';
+    tc.appendChild(d);
+  }
+})();
+
+// ==== demo de inundación en canvas ====
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const PAL=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6'];
+const ROWS=6,COLS=10,CS=80;
+let grid=[],flood=new Set();
+function newGrid(){grid=[];for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++)grid[r][c]=Math.floor(Math.random()*5)}}
+// Demo: crece por oleadas (absorbe regiones enteras de un color)
+let step=0;
+function demoStep(){
+  // crea oleada: toma el primer vecino libre de flood y absorbe toda su región de color
+  const free=[];
+  flood.forEach(k=>{const r=Math.floor(k/COLS),c=k%COLS;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{
+    const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)return;
+    const k2=nr*COLS+nc;if(!flood.has(k2)&&!free.includes(k2))free.push(k2);
+  })});
+  if(!free.length||flood.size>=ROWS*COLS){newGrid();flood=new Set([0]);setTimeout(resetDemo,2200);return}
+  const target=free[0];const tr=Math.floor(target/COLS),tc2=target%COLS;const col=grid[tr][tc2];
+  const q=[target];flood.add(target);
+  while(q.length){const k=q.pop();const r=Math.floor(k/COLS),c=k%COLS;[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dr,dc])=>{
+    const nr=r+dr,nc=c+dc;if(nr<0||nr>=ROWS||nc<0||nc>=COLS)return;
+    const k2=nr*COLS+nc;if(flood.has(k2))return;if(grid[nr][nc]!==col)return;
+    flood.add(k2);q.push(k2);
+  });}
+  step++;
+}
+function resetDemo(){flood=new Set([0]);}
+newGrid();flood=new Set([0]);
+function drawDemo(){
+  ctx.clearRect(0,0,820,520);
+  const ox=10,oy=10;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const x=ox+c*CS,y=oy+r*CS,flooded=flood.has(r*COLS+c);
+    if(flooded){ctx.fillStyle='#2dd4bf'}else{ctx.fillStyle=PAL[grid[r][c]]}
+    ctx.beginPath();ctx.roundRect(x+2,y+2,CS-4,CS-4,12);ctx.fill();
+    if(!flooded){ctx.globalAlpha=.25;ctx.fillStyle='#0f0f1a';ctx.fill();ctx.globalAlpha=1}
+  }
+}
+
+// ==== control de secciones por tiempo (solo una visible a la vez) ====
+const sections=[document.getElementById('s1'),document.getElementById('s2'),document.getElementById('s3'),document.getElementById('s4'),document.getElementById('s5')];
+const cards=[document.getElementById('c1'),document.getElementById('c2'),document.getElementById('c3')];
+const T0=performance.now();
+let demoAcc=0,curSec=0;
+function showOnly(n){
+  if(n===curSec)return;
+  sections.forEach(s=>s.classList.remove('on'));
+  cards.forEach(c=>c.classList.remove('on'));
+  curSec=n;
+  sections[curSec].classList.add('on');
+  if(curSec===2){
+    setTimeout(()=>cards[0].classList.add('on'),500);
+    setTimeout(()=>cards[1].classList.add('on'),2600);
+    setTimeout(()=>cards[2].classList.add('on'),4700);
+  }
+}
+function frame(now){
+  const t=(now-T0)/1000;
+  demoAcc++;
+  if(demoAcc%9===0){demoStep()}
+  drawDemo();
+  if(t>4.5&&curSec===0)showOnly(1);
+  if(t>12.5&&curSec===1)showOnly(2);
+  if(t>27.0&&curSec===2)showOnly(3);
+  if(t>30.5&&curSec===3)showOnly(4);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
