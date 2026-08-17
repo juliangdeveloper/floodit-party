@@ -63,8 +63,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 @keyframes puGlow{0%{opacity:.4;filter:brightness(1)}100%{opacity:.9;filter:brightness(1.3)}}
 .cell .pu-icon{font-size:12px;position:relative;z-index:2;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
 
-/* SHIELDED cells glow */
-.cell.shielded{outline:2px solid #0ff;outline-offset:-2px;box-shadow:0 0 6px rgba(0,255,255,.4)}
+/* Wave capture animation */
+.cell.capturing{animation:captureRipple .4s ease-out}
+@keyframes captureRipple{0%{transform:scale(.7);filter:brightness(.5)}50%{transform:scale(1.2);filter:brightness(2)}100%{transform:scale(1);filter:brightness(1)}}
+
+/* Frozen player indicator */
+.pb.frozen{background:rgba(100,200,255,.2)!important;border-color:#64c8ff!important}
+.pb.frozen::after{content:' ❄️'}
 
 /* Explosion ripple */
 .explosion{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,rgba(255,100,0,.8),rgba(255,50,0,.3),transparent);animation:explode .5s ease-out forwards;pointer-events:none;z-index:10}
@@ -198,10 +203,10 @@ const PCOL=['#2dd4bf','#f97316','#ec4899','#84cc16'];
 const CORNERS=[[0,0],[-1,-1],[0,-1],[-1,0]]; // según nº jugadores se toman las primeras
 
 // Power-up definitions
-const PU_TYPES=['bomb','shield','steal','double'];
+const PU_TYPES=['bomb','freeze','steal','double'];
 const PU_DIST=[0.35,0.30,0.20,0.15]; // cumulative not needed, just weights
-const PU_EMOJI={bomb:'💣',shield:'🛡️',steal:'⚡',double:'🔄'};
-const PU_GLOW={bomb:'#ff4500',shield:'#00bfff',steal:'#ff1493',double:'#ffd700'};
+const PU_EMOJI={bomb:'💣',freeze:'❄️',steal:'⚡',double:'🔄'};
+const PU_GLOW={bomb:'#ff4500',freeze:'#64c8ff',steal:'#ff1493',double:'#ffd700'};
 
 let G={grid:[],owner:[],cellType:[],powerupType:[],rows:11,cols:14,colors:5,players:[],curP:0,turns:0,animating:false,over:false,stall:0,specialEnabled:true,wallPct:8,wallCount:0};
 
@@ -228,7 +233,7 @@ function startG(){
   for(let i=0;i<n;i++){
     const nm=document.getElementById(`pn${i}`)?.value.trim()||`Jugador ${i+1}`;
     const tp=document.getElementById(`pt${i}`)?.value||'human';
-    G.players.push({name:nm,type:tp,color:PCOL[i],terr:0,big:0,shieldTurns:0,doubleReady:false,totalCaptured:0});
+    G.players.push({name:nm,type:tp,color:PCOL[i],terr:0,big:0,frozenTurns:0,doubleReady:false,totalCaptured:0});
   }
   generateBoard();
   G.curP=0;
@@ -381,10 +386,11 @@ function corner(i){
 }
 
 // ===================== CORE: FLOOD CAPTURE =====================
-// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n, powerups:[puType...]}
+// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n, powerups:[puType...], waves:[[cells_at_dist_1],[dist_2],...]}
 function doCapture(owner,p,color){
   const captured=[];
   const capturedPowerups=[];
+  const waves=[];
   const visited=new Set();
   const frontier=[];
   // sembrar desde el territorio actual del jugador
@@ -396,36 +402,35 @@ function doCapture(owner,p,color){
         if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
         // Skip walls
         if(G.cellType[nr][nc]==='wall')continue;
-        // Skip shielded opponent cells
-        if(isShielded(nr,nc,p))continue;
         visited.add(key);frontier.push([nr,nc]);
       }
     }
   }
   while(frontier.length){
-    const [r,c]=frontier.pop();
-    captured.push([r,c]);
-    owner[r][c]=p;
-    // Check if this cell is a power-up
-    if(G.cellType[r][c]==='powerup'&&G.powerupType[r][c]){
-      capturedPowerups.push({r,c,type:G.powerupType[r][c]});
+    const wave=[];
+    const nextFrontier=[];
+    for(const [r,c] of frontier){
+      wave.push([r,c]);
+      captured.push([r,c]);
+      owner[r][c]=p;
+      // Check if this cell is a power-up
+      if(G.cellType[r][c]==='powerup'&&G.powerupType[r][c]){
+        capturedPowerups.push({r,c,type:G.powerupType[r][c]});
+      }
+      for(const[nr,nc]of nbors(r,c)){
+        const key=nr*1000+nc;
+        if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
+        if(G.cellType[nr][nc]==='wall')continue;
+        visited.add(key);nextFrontier.push([nr,nc]);
+      }
     }
-    for(const[nr,nc]of nbors(r,c)){
-      const key=nr*1000+nc;
-      if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
-      if(G.cellType[nr][nc]==='wall')continue;
-      if(isShielded(nr,nc,p))continue;
-      visited.add(key);frontier.push([nr,nc]);
-    }
+    if(wave.length>0)waves.push(wave);
+    frontier.length=0;
+    for(const f of nextFrontier)frontier.push(f);
   }
-  return {list:captured,n:captured.length,powerups:capturedPowerups};
+  return {list:captured,n:captured.length,powerups:capturedPowerups,waves};
 }
 
-function isShielded(r,c,attackerP){
-  const ownerP=G.owner[r][c];
-  if(ownerP<0||ownerP===attackerP)return false;
-  return G.players[ownerP].shieldTurns>0;
-}
 
 function nbors(r,c){
   const a=[];
@@ -446,8 +451,8 @@ async function processPowerups(pIdx,puList){
 
     if(pu.type==='bomb'){
       await doBomb(pIdx);
-    }else if(pu.type==='shield'){
-      doShield(pIdx);
+    }else if(pu.type==='freeze'){
+      doFreeze(pIdx);
     }else if(pu.type==='steal'){
       await doSteal(pIdx);
     }else if(pu.type==='double'){
@@ -489,9 +494,16 @@ async function doBomb(pIdx){
   }
 }
 
-function doShield(pIdx){
-  G.players[pIdx].shieldTurns=3;
-  setMsg(`🛡️ ¡${G.players[pIdx].name} activa Escudo por 3 turnos!`);
+function doFreeze(pIdx){
+  // Pick a random OTHER player to freeze
+  const others=[];
+  for(let i=0;i<G.players.length;i++){
+    if(i!==pIdx)others.push(i);
+  }
+  if(others.length===0)return;
+  const target=others[Math.floor(Math.random()*others.length)];
+  G.players[target].frozenTurns=1;
+  setMsg(`❄️ ¡${G.players[pIdx].name} congela a ${G.players[target].name}! Pierde su próximo turno`);
 }
 
 async function doSteal(pIdx){
@@ -538,8 +550,23 @@ function startTurn(){
   if(G.over)return;
   const p=G.players[G.curP];
   updateTerritory();
-  renderPicker(p);
   renderPlayerBar();
+
+  // Check if player is frozen — skip turn
+  if(p.frozenTurns>0){
+    p.frozenTurns--;
+    renderPicker(p);
+    setMsg(`❄️ ${p.name} está congelado! Pierde este turno`);
+    setTimeout(()=>{
+      if(G.over)return;
+      G.curP=(G.curP+1)%G.players.length;
+      renderAll();
+      startTurn();
+    },1500);
+    return;
+  }
+
+  renderPicker(p);
   setMsg(`🎯 ${p.name}: elige un color para inundar`);
   if(p.type!=='human')setTimeout(aiTurn,600);
 }
@@ -568,14 +595,20 @@ async function processTurn(color){
   // Track total captured (for end screen scoring)
   player.totalCaptured+=res.n;
 
-  // animación
-  const gained=[];
-  for(const[r,c]of res.list){
-    const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-    if(el){el.classList.add('newcap');gained.push(el)}
+  // Wave-by-wave animation
+  if(res.waves&&res.waves.length>0){
+    for(let w=0;w<res.waves.length;w++){
+      const wave=res.waves[w];
+      for(const[r,c]of wave){
+        const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+        if(el){el.classList.add('capturing')}
+      }
+      renderBoard();
+      updateTerritory();
+      renderPlayerBar();
+      await sleep(200);
+    }
   }
-  renderPlayerBar();
-  updateTerritory();
 
   if(res.n>0){
     if(displayN>player.big)player.big=displayN;
@@ -585,7 +618,7 @@ async function processTurn(color){
   }else{
     setMsg(`💨 ${player.name} eligió ${COLOR_NAMES[color]} pero no capturó nada`);
   }
-  await sleep(700);
+  await sleep(500);
 
   // Process captured power-ups
   if(res.powerups.length>0){
@@ -598,13 +631,6 @@ async function processTurn(color){
 
   // avanzar / terminar
   if(res.n===0){G.stall++}else{G.stall=0}
-
-  // Decrement shields for all players at end of a full round
-  if(G.curP===G.players.length-1){
-    for(const pl of G.players){
-      if(pl.shieldTurns>0)pl.shieldTurns--;
-    }
-  }
 
   const unclaimed=countUnclaimed();
   G.curP=(G.curP+1)%G.players.length;
@@ -687,13 +713,12 @@ function renderBoard(){
 
       const bg=own>=0?PCOL[own]:PALETTE[G.grid[r][c]];
       const cornerCls=own>=0&&isCorner(r,c,own)?' corner':'';
-      const shieldCls=(own>=0&&G.players[own]&&G.players[own].shieldTurns>0)?' shielded':'';
 
       if(ct==='powerup'&&puT&&own<0){
         const glowColor=PU_GLOW[puT]||'#fff';
         html+=`<div class="cell powerup${cornerCls}" data-r="${r}" data-c="${c}" style="background:${bg};--pu-glow:${glowColor}"><span class="pu-icon">${PU_EMOJI[puT]||'?'}</span></div>`;
       }else{
-        html+=`<div class="cell${cornerCls}${shieldCls}" data-r="${r}" data-c="${c}" style="background:${bg}"></div>`;
+        html+=`<div class="cell${cornerCls}" data-r="${r}" data-c="${c}" style="background:${bg}"></div>`;
       }
     }
   }
@@ -737,9 +762,10 @@ function renderPlayerBar(){
     const isCur=i===G.curP&&!G.over;
     const pct=Math.round(p.terr/total*100);
     let effects='';
-    if(p.shieldTurns>0)effects+=`<span class="pb-effects">🛡️×${p.shieldTurns}</span>`;
+    if(p.frozenTurns>0)effects+=`<span class="pb-effects">❄️</span>`;
     if(p.doubleReady)effects+=`<span class="pb-effects">⚡</span>`;
-    return`<div class="pb ${isCur?'current':''}" style="color:${p.color};border-color:${p.color};background:${isCur?p.color+'22':'transparent'}">${p.name}<span class="pb-score">${p.terr}</span><span class="pct">${pct}%</span>${effects}</div>`;
+    const frozenCls=p.frozenTurns>0?' frozen':'';
+    return`<div class="pb ${isCur?'current':''}${frozenCls}" style="color:${p.color};border-color:${p.color};background:${isCur?p.color+'22':'transparent'}">${p.name}<span class="pb-score">${p.terr}</span><span class="pct">${pct}%</span>${effects}</div>`;
   }).join('');
 }
 
@@ -831,7 +857,7 @@ function showRules(){
     <p>Casillas especiales con brillo que otorgan <strong>habilidades</strong> al capturarlas:</p>
     <ul>
       <li>💣 <strong>Bomba:</strong> Captura 3 casillas libres adicionales adyacentes a tu territorio (explosión)</li>
-      <li>🛡️ <strong>Escudo:</strong> Protege tu territorio por 3 turnos — los rivales no pueden capturar tus casillas</li>
+      <li>❄️ <strong>Congelar:</strong> ¡Congela a un oponente aleatorio! Pierde su próximo turno</li>
       <li>⚡ <strong>Robo:</strong> ¡Roba 3 casillas al jugador con más territorio!</li>
       <li>🔄 <strong>Doble:</strong> Tu próxima captura vale ×2 en la puntuación mostrada</li>
     </ul>
