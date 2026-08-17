@@ -30,14 +30,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .pcb label{font-size:.85em;color:var(--dim);cursor:pointer;padding:4px 10px;border-radius:8px;border:2px solid #333;transition:all .2s}
 .pcb label:has(input:checked){border-color:var(--accent);background:rgba(233,69,96,.15)}
 .pcb input{display:none}
-.toggle-row{display:flex;align-items:center;gap:10px;margin:6px 0;justify-content:center}
-.toggle-row label.toggle-label{font-size:.85em;color:var(--dim);cursor:pointer}
-.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
-.toggle-switch input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:#333;border-radius:12px;cursor:pointer;transition:.3s}
-.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#888;border-radius:50%;transition:.3s}
-.toggle-switch input:checked+.toggle-slider{background:var(--accent)}
-.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);background:#fff}
 
 /* GAME */
 #game{padding:8px;width:100%}
@@ -53,27 +45,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 @keyframes newCap{0%{transform:scale(.6);filter:brightness(3)}60%{transform:scale(1.15);filter:brightness(1.6)}100%{transform:scale(1);filter:brightness(1)}}
 .corner{outline:3px solid rgba(255,255,255,.85);outline-offset:-1px;z-index:3}
 
-/* WALL CELLS */
-.cell.wall{background:#2c2c3a!important;box-shadow:inset 2px 2px 4px rgba(0,0,0,.6),inset -1px -1px 3px rgba(80,80,100,.3);border:1px solid #1a1a28}
-.cell.wall::after{content:'🧱';font-size:10px;opacity:.5;position:absolute}
-
-/* POWER-UP CELLS */
-.cell.powerup{position:relative}
-.cell.powerup::before{content:'';position:absolute;inset:1px;border-radius:3px;border:2px solid;opacity:.7;pointer-events:none;animation:puGlow 1.5s ease-in-out infinite alternate}
-@keyframes puGlow{0%{opacity:.4;filter:brightness(1)}100%{opacity:.9;filter:brightness(1.3)}}
-.cell .pu-icon{font-size:12px;position:relative;z-index:2;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
-
-/* SHIELDED cells glow */
-.cell.shielded{outline:2px solid #0ff;outline-offset:-2px;box-shadow:0 0 6px rgba(0,255,255,.4)}
-
-/* Explosion ripple */
-.explosion{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,rgba(255,100,0,.8),rgba(255,50,0,.3),transparent);animation:explode .5s ease-out forwards;pointer-events:none;z-index:10}
-@keyframes explode{0%{transform:scale(0);opacity:1}100%{transform:scale(3);opacity:0}}
-
-/* Steal swipe */
-.swipe{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,0,100,.6),transparent);animation:swipeAnim .4s ease-out forwards;pointer-events:none;z-index:10}
-@keyframes swipeAnim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-
 /* COLOR PICKER */
 .picker{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
 .pbtn{width:44px;height:44px;border-radius:50%;border:3px solid #333;cursor:pointer;transition:all .15s}
@@ -86,7 +57,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .pb.current{opacity:1;transform:scale(1.1);box-shadow:0 0 12px rgba(255,255,255,.15)}
 .pb .pb-score{margin-left:6px;font-size:.95em}
 .pb .pct{display:block;font-size:.68em;font-weight:600;opacity:.8}
-.pb .pb-effects{display:inline;margin-left:4px;font-size:.85em}
 
 /* SCORE POP */
 .score-pop{position:fixed;pointer-events:none;font-size:1.5em;font-weight:900;z-index:100;text-shadow:0 2px 8px rgba(0,0,0,.8);animation:popUp .8s ease-out forwards}
@@ -140,22 +110,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <label><input type="radio" name="bsz" value="big"> Grande (18×14)</label>
     </div>
   </div>
-  <div class="ms">
-    <h3>Celdas Especiales</h3>
-    <div class="toggle-row">
-      <label class="toggle-label">Celdas especiales</label>
-      <div class="toggle-switch"><input type="checkbox" id="specialToggle" checked><span class="toggle-slider" onclick="this.previousElementSibling.click()"></span></div>
-    </div>
-    <div id="wallDensityWrap">
-      <p style="font-size:.8em;color:var(--dim);margin:8px 0 4px">Densidad de muros</p>
-      <div class="pcb">
-        <label><input type="radio" name="wdens" value="0"> Ninguno</label>
-        <label><input type="radio" name="wdens" value="5"> Pocos (5%)</label>
-        <label><input type="radio" name="wdens" value="8" checked> Algunos (8%)</label>
-        <label><input type="radio" name="wdens" value="12"> Muchos (12%)</label>
-      </div>
-    </div>
-  </div>
   <div class="bg">
     <button class="btn btn-p" onclick="startG()">🎲 Jugar</button>
     <button class="btn btn-s" onclick="showAbout()">📄 El Paper</button>
@@ -197,13 +151,7 @@ const COLOR_NAMES=['Rojo','Azul','Verde','Amarillo','Morado','Naranja'];
 const PCOL=['#2dd4bf','#f97316','#ec4899','#84cc16'];
 const CORNERS=[[0,0],[-1,-1],[0,-1],[-1,0]]; // según nº jugadores se toman las primeras
 
-// Power-up definitions
-const PU_TYPES=['bomb','shield','steal','double'];
-const PU_DIST=[0.35,0.30,0.20,0.15]; // cumulative not needed, just weights
-const PU_EMOJI={bomb:'💣',shield:'🛡️',steal:'⚡',double:'🔄'};
-const PU_GLOW={bomb:'#ff4500',shield:'#00bfff',steal:'#ff1493',double:'#ffd700'};
-
-let G={grid:[],owner:[],cellType:[],powerupType:[],rows:11,cols:14,colors:5,players:[],curP:0,turns:0,animating:false,over:false,stall:0,specialEnabled:true,wallPct:8,wallCount:0};
+let G={grid:[],owner:[],rows:11,cols:14,colors:5,players:[],curP:0,turns:0,animating:false,over:false,stall:0};
 
 // ===================== SETUP =====================
 function setPC(n){document.querySelectorAll('#menu .cbtn').forEach((b,i)=>b.classList.toggle('on',i===n-2));renderPS(n)}
@@ -212,23 +160,15 @@ function getPC(){const a=document.querySelector('#menu .cbtn.on');return a?parse
 function getCol(){return parseInt(document.querySelector('input[name=col]:checked')?.value||5)}
 function getBoardSize(){const v=document.querySelector('input[name=bsz]:checked')?.value||'med';return v==='small'?{c:10,r:8}:v==='big'?{c:18,r:14}:{c:14,r:11}}
 
-// Toggle wall density visibility
-document.getElementById('specialToggle').addEventListener('change',function(){
-  document.getElementById('wallDensityWrap').style.display=this.checked?'block':'none';
-});
-
 // ===================== START =====================
 function startG(){
   const n=getPC();const bs=getBoardSize();
   G.cols=bs.c;G.rows=bs.r;G.colors=getCol();G.turns=0;G.over=false;G.animating=false;G.stall=0;
-  G.specialEnabled=document.getElementById('specialToggle').checked;
-  G.wallPct=parseInt(document.querySelector('input[name=wdens]:checked')?.value||'8');
-  G.wallCount=0;
   G.players=[];
   for(let i=0;i<n;i++){
     const nm=document.getElementById(`pn${i}`)?.value.trim()||`Jugador ${i+1}`;
     const tp=document.getElementById(`pt${i}`)?.value||'human';
-    G.players.push({name:nm,type:tp,color:PCOL[i],terr:0,big:0,shieldTurns:0,doubleReady:false,totalCaptured:0});
+    G.players.push({name:nm,type:tp,color:PCOL[i],terr:0,big:0});
   }
   generateBoard();
   G.curP=0;
@@ -237,142 +177,22 @@ function startG(){
   showS('game');
 }
 
-// ===================== BOARD GENERATION =====================
 function generateBoard(){
-  G.grid=[];G.owner=[];G.cellType=[];G.powerupType=[];G.wallCount=0;
-
-  // Generate colors
+  G.grid=[];G.owner=[];
   for(let r=0;r<G.rows;r++){
-    G.grid[r]=[];G.owner[r]=[];G.cellType[r]=[];G.powerupType[r]=[];
+    G.grid[r]=[];G.owner[r]=[];
     for(let c=0;c<G.cols;c++){
       G.grid[r][c]=Math.floor(Math.random()*G.colors);
       G.owner[r][c]=-1;
-      G.cellType[r][c]='normal';
-      G.powerupType[r][c]=null;
     }
   }
-
-  // Place corners first
-  const cornerCells=new Set();
-  for(let i=0;i<G.players.length;i++){
-    const [rr,cc]=corner(i);
-    cornerCells.add(rr*1000+cc);
-  }
-
-  // Place walls if special cells enabled
-  if(G.specialEnabled && G.wallPct>0){
-    const totalCells=G.rows*G.cols;
-    const targetWalls=Math.floor(totalCells*G.wallPct/100);
-    const candidates=[];
-
-    // Collect candidate cells (not corners)
-    for(let r=0;r<G.rows;r++){
-      for(let c=0;c<G.cols;c++){
-        if(!cornerCells.has(r*1000+c)){
-          candidates.push([r,c]);
-        }
-      }
-    }
-
-    // Shuffle candidates
-    shuffle(candidates);
-
-    let placed=0;
-    for(const [r,c] of candidates){
-      if(placed>=targetWalls)break;
-      // Temporarily place wall
-      G.cellType[r][c]='wall';
-      G.wallCount++;
-
-      // Check connectivity: all corners must still be reachable from each other via non-wall cells
-      if(!checkBoardConnectivity(cornerCells)){
-        // Undo wall placement
-        G.cellType[r][c]='normal';
-        G.wallCount--;
-      }else{
-        placed++;
-      }
-    }
-  }
-
-  // Place power-ups on remaining normal, non-corner cells
-  if(G.specialEnabled){
-    const puCandidates=[];
-    for(let r=0;r<G.rows;r++){
-      for(let c=0;c<G.cols;c++){
-        if(G.cellType[r][c]==='normal'&&!cornerCells.has(r*1000+c)){
-          puCandidates.push([r,c]);
-        }
-      }
-    }
-    shuffle(puCandidates);
-    const puTarget=Math.floor((G.rows*G.cols-G.wallCount)*0.05);
-    for(let i=0;i<Math.min(puTarget,puCandidates.length);i++){
-      const[r,c]=puCandidates[i];
-      G.cellType[r][c]='powerup';
-      G.powerupType[r][c]=pickPUType();
-    }
-  }
-
-  // Assign corners to players
+  // esquinas de cada jugador
+  const cn=['tl','br','tr','bl'];
   for(let i=0;i<G.players.length;i++){
     const [rr,cc]=corner(i);
     G.owner[rr][cc]=i;
   }
 }
-
-function pickPUType(){
-  const r=Math.random();
-  let cum=0;
-  for(let i=0;i<PU_DIST.length;i++){
-    cum+=PU_DIST[i];
-    if(r<cum)return PU_TYPES[i];
-  }
-  return PU_TYPES[PU_TYPES.length-1];
-}
-
-function shuffle(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [arr[i],arr[j]]=[arr[j],arr[i]];
-  }
-}
-
-// BFS connectivity check: verify all corner cells can reach each other
-function checkBoardConnectivity(cornerCells){
-  const corners=[...cornerCells];
-  if(corners.length<=1)return true;
-
-  // BFS from first corner
-  const start=corners[0];
-  const sr=Math.floor(start/1000),sc=start%1000;
-  const visited=bfsNonWall(sr,sc);
-
-  // All other corners must be reachable
-  for(let i=1;i<corners.length;i++){
-    const key=corners[i];
-    if(!visited.has(key))return false;
-  }
-  return true;
-}
-
-function bfsNonWall(sr,sc){
-  const visited=new Set();
-  const queue=[[sr,sc]];
-  visited.add(sr*1000+sc);
-  while(queue.length){
-    const[r,c]=queue.shift();
-    for(const[nr,nc]of nbors(r,c)){
-      const key=nr*1000+nc;
-      if(visited.has(key))continue;
-      if(G.cellType[nr][nc]==='wall')continue;
-      visited.add(key);
-      queue.push([nr,nc]);
-    }
-  }
-  return visited;
-}
-
 function corner(i){
   const n=G.players.length;
   if(n===2)return i===0?[0,0]:[G.rows-1,G.cols-1];
@@ -381,10 +201,9 @@ function corner(i){
 }
 
 // ===================== CORE: FLOOD CAPTURE =====================
-// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n, powerups:[puType...]}
+// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n}
 function doCapture(owner,p,color){
   const captured=[];
-  const capturedPowerups=[];
   const visited=new Set();
   const frontier=[];
   // sembrar desde el territorio actual del jugador
@@ -394,10 +213,6 @@ function doCapture(owner,p,color){
       for(const[nr,nc]of nbors(r,c)){
         const key=nr*1000+nc;
         if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
-        // Skip walls
-        if(G.cellType[nr][nc]==='wall')continue;
-        // Skip shielded opponent cells
-        if(isShielded(nr,nc,p))continue;
         visited.add(key);frontier.push([nr,nc]);
       }
     }
@@ -406,27 +221,14 @@ function doCapture(owner,p,color){
     const [r,c]=frontier.pop();
     captured.push([r,c]);
     owner[r][c]=p;
-    // Check if this cell is a power-up
-    if(G.cellType[r][c]==='powerup'&&G.powerupType[r][c]){
-      capturedPowerups.push({r,c,type:G.powerupType[r][c]});
-    }
     for(const[nr,nc]of nbors(r,c)){
       const key=nr*1000+nc;
       if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
-      if(G.cellType[nr][nc]==='wall')continue;
-      if(isShielded(nr,nc,p))continue;
       visited.add(key);frontier.push([nr,nc]);
     }
   }
-  return {list:captured,n:captured.length,powerups:capturedPowerups};
+  return {list:captured,n:captured.length};
 }
-
-function isShielded(r,c,attackerP){
-  const ownerP=G.owner[r][c];
-  if(ownerP<0||ownerP===attackerP)return false;
-  return G.players[ownerP].shieldTurns>0;
-}
-
 function nbors(r,c){
   const a=[];
   if(r>0)a.push([r-1,c]);
@@ -436,110 +238,12 @@ function nbors(r,c){
   return a;
 }
 
-// ===================== POWER-UP EFFECTS =====================
-async function processPowerups(pIdx,puList){
-  const p=G.players[pIdx];
-  for(const pu of puList){
-    // Mark power-up as consumed (remove from board)
-    G.cellType[pu.r][pu.c]='normal';
-    G.powerupType[pu.r][pu.c]=null;
-
-    if(pu.type==='bomb'){
-      await doBomb(pIdx);
-    }else if(pu.type==='shield'){
-      doShield(pIdx);
-    }else if(pu.type==='steal'){
-      await doSteal(pIdx);
-    }else if(pu.type==='double'){
-      doDouble(pIdx);
-    }
-  }
-}
-
-async function doBomb(pIdx){
-  // Capture 3 random free cells adjacent to player territory
-  const adjFree=[];
-  for(let r=0;r<G.rows;r++){
-    for(let c=0;c<G.cols;c++){
-      if(G.owner[r][c]!==pIdx)continue;
-      for(const[nr,nc]of nbors(r,c)){
-        if(G.owner[nr][nc]===-1&&G.cellType[nr][nc]!=='wall'){
-          adjFree.push([nr,nc]);
-        }
-      }
-    }
-  }
-  shuffle(adjFree);
-  const toCapture=adjFree.slice(0,3);
-  for(const[r,c]of toCapture){
-    G.owner[r][c]=pIdx;
-    // Animate explosion
-    const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-    if(el){
-      const exp=document.createElement('div');
-      exp.className='explosion';
-      el.appendChild(exp);
-      setTimeout(()=>exp.remove(),500);
-    }
-  }
-  if(toCapture.length>0){
-    G.players[pIdx].totalCaptured+=toCapture.length;
-    setMsg(`💣 ¡${G.players[pIdx].name} usa Bomba! +${toCapture.length} casillas`);
-    await sleep(600);
-  }
-}
-
-function doShield(pIdx){
-  G.players[pIdx].shieldTurns=3;
-  setMsg(`🛡️ ¡${G.players[pIdx].name} activa Escudo por 3 turnos!`);
-}
-
-async function doSteal(pIdx){
-  // Find player with most territory (excluding current)
-  let target=-1,maxTerr=0;
-  for(let i=0;i<G.players.length;i++){
-    if(i===pIdx)continue;
-    if(G.players[i].terr>maxTerr){maxTerr=G.players[i].terr;target=i}
-  }
-  if(target<0)return;
-
-  // Remove 3 random cells from their territory
-  const theirCells=[];
-  for(let r=0;r<G.rows;r++){
-    for(let c=0;c<G.cols;c++){
-      if(G.owner[r][c]===target)theirCells.push([r,c]);
-    }
-  }
-  shuffle(theirCells);
-  const toSteal=theirCells.slice(0,3);
-  for(const[r,c]of toSteal){
-    G.owner[r][c]=-1;
-    const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
-    if(el){
-      const sw=document.createElement('div');
-      sw.className='swipe';
-      el.appendChild(sw);
-      setTimeout(()=>sw.remove(),400);
-    }
-  }
-  if(toSteal.length>0){
-    setMsg(`⚡ ¡${G.players[pIdx].name} roba ${toSteal.length} casillas de ${G.players[target].name}!`);
-    await sleep(600);
-  }
-}
-
-function doDouble(pIdx){
-  G.players[pIdx].doubleReady=true;
-  setMsg(`🔄 ¡${G.players[pIdx].name} activa Doble! Su próxima captura vale x2`);
-}
-
 // ===================== TURN =====================
 function startTurn(){
   if(G.over)return;
   const p=G.players[G.curP];
   updateTerritory();
   renderPicker(p);
-  renderPlayerBar();
   setMsg(`🎯 ${p.name}: elige un color para inundar`);
   if(p.type!=='human')setTimeout(aiTurn,600);
 }
@@ -554,58 +258,28 @@ function chooseColor(color){
 async function processTurn(color){
   G.animating=true;
   const p=G.curP;
-  const player=G.players[p];
   const res=doCapture(G.owner,p,color);
   G.turns++;
-
-  // Apply double multiplier for display
-  let displayN=res.n;
-  if(player.doubleReady&&res.n>0){
-    displayN=res.n*2;
-    player.doubleReady=false;
-  }
-
-  // Track total captured (for end screen scoring)
-  player.totalCaptured+=res.n;
-
   // animación
   const gained=[];
   for(const[r,c]of res.list){
-    const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    const el=q(`.cell[data-r="${r}"][data-c="${c}"]`);
     if(el){el.classList.add('newcap');gained.push(el)}
   }
   renderPlayerBar();
   updateTerritory();
-
   if(res.n>0){
-    if(displayN>player.big)player.big=displayN;
-    showScorePop(res.list[0],displayN,player.color);
-    const bonusText=displayN!==res.n?` (×2 = ${displayN})`:'';
-    setMsg(`🌊 +${res.n}${bonusText} casillas para ${player.name} (${COLOR_NAMES[color]})`);
+    const p2=G.players[p];
+    if(res.n>p2.big)p2.big=res.n;
+    showScorePop(res.list[0],res.n,G.players[p].color);
+    setMsg(`🌊 +${res.n} casillas para ${G.players[p].name} (${COLOR_NAMES[color]})`);
   }else{
-    setMsg(`💨 ${player.name} eligió ${COLOR_NAMES[color]} pero no capturó nada`);
+    setMsg(`💨 ${G.players[p].name} eligió ${COLOR_NAMES[color]} pero no capturó nada`);
   }
   await sleep(700);
-
-  // Process captured power-ups
-  if(res.powerups.length>0){
-    await processPowerups(p,res.powerups);
-    renderBoard();
-    updateTerritory();
-    renderPlayerBar();
-    await sleep(400);
-  }
-
+  const still=G.players[G.curP].type==='human'?true:true;
   // avanzar / terminar
   if(res.n===0){G.stall++}else{G.stall=0}
-
-  // Decrement shields for all players at end of a full round
-  if(G.curP===G.players.length-1){
-    for(const pl of G.players){
-      if(pl.shieldTurns>0)pl.shieldTurns--;
-    }
-  }
-
   const unclaimed=countUnclaimed();
   G.curP=(G.curP+1)%G.players.length;
   G.animating=false;
@@ -614,16 +288,7 @@ async function processTurn(color){
   startTurn();
 }
 
-function countUnclaimed(){
-  let n=0;
-  for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]===-1&&G.cellType[r][c]!=='wall')n++;
-  return n;
-}
-
-function countPlayable(){
-  return G.rows*G.cols-G.wallCount;
-}
-
+function countUnclaimed(){let n=0;for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]===-1)n++;return n}
 function updateTerritory(){
   G.players.forEach(p=>p.terr=0);
   for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]>=0)G.players[G.owner[r][c]].terr++;
@@ -669,7 +334,6 @@ function renderAll(){
   renderBoard();renderPlayerBar();renderTurnBadge();
   document.getElementById('turnCount').textContent=`Turno ${G.turns+1}`;
 }
-
 function renderBoard(){
   const board=document.getElementById('board');
   board.style.gridTemplateColumns=`repeat(${G.cols},30px)`;
@@ -677,49 +341,17 @@ function renderBoard(){
   for(let r=0;r<G.rows;r++){
     for(let c=0;c<G.cols;c++){
       const own=G.owner[r][c];
-      const ct=G.cellType[r][c];
-      const puT=G.powerupType[r][c];
-
-      if(ct==='wall'){
-        html+=`<div class="cell wall" data-r="${r}" data-c="${c}"></div>`;
-        continue;
-      }
-
       const bg=own>=0?PCOL[own]:PALETTE[G.grid[r][c]];
       const cornerCls=own>=0&&isCorner(r,c,own)?' corner':'';
-      const shieldCls=(own>=0&&G.players[own]&&G.players[own].shieldTurns>0)?' shielded':'';
-
-      if(ct==='powerup'&&puT&&own<0){
-        const glowColor=PU_GLOW[puT]||'#fff';
-        html+=`<div class="cell powerup${cornerCls}" data-r="${r}" data-c="${c}" style="background:${bg};--pu-glow:${glowColor}"><span class="pu-icon">${PU_EMOJI[puT]||'?'}</span></div>`;
-      }else{
-        html+=`<div class="cell${cornerCls}${shieldCls}" data-r="${r}" data-c="${c}" style="background:${bg}"></div>`;
-      }
+      html+=`<div class="cell${cornerCls}" data-r="${r}" data-c="${c}" style="background:${bg}"></div>`;
     }
   }
   board.innerHTML=html;
-
-  // Apply power-up glow borders via inline style (CSS custom property)
-  document.querySelectorAll('.cell.powerup').forEach(el=>{
-    const glow=el.style.getPropertyValue('--pu-glow');
-    if(glow){
-      el.querySelector(':scope')?.style.setProperty('--pu-glow',glow);
-      // Apply via the ::before pseudo element using a style injection
-      const r=el.dataset.r,c=el.dataset.c;
-      const puT=G.powerupType[r]?.[c];
-      if(puT){
-        el.style.boxShadow=`0 0 6px ${PU_GLOW[puT]||'#fff'}40`;
-        el.style.border=`1px solid ${PU_GLOW[puT]||'#fff'}80`;
-      }
-    }
-  });
 }
-
 function isCorner(r,c,p){
   const[nr,nc]=corner(p);
   return r===nr&&c===nc;
 }
-
 function renderPicker(p){
   const pick=document.getElementById('picker');
   let html='';
@@ -729,20 +361,15 @@ function renderPicker(p){
   }
   pick.innerHTML=html;
 }
-
 function renderPlayerBar(){
   const bar=document.getElementById('playerBar');
-  const total=countPlayable();
+  const total=G.rows*G.cols;
   bar.innerHTML=G.players.map((p,i)=>{
     const isCur=i===G.curP&&!G.over;
     const pct=Math.round(p.terr/total*100);
-    let effects='';
-    if(p.shieldTurns>0)effects+=`<span class="pb-effects">🛡️×${p.shieldTurns}</span>`;
-    if(p.doubleReady)effects+=`<span class="pb-effects">⚡</span>`;
-    return`<div class="pb ${isCur?'current':''}" style="color:${p.color};border-color:${p.color};background:${isCur?p.color+'22':'transparent'}">${p.name}<span class="pb-score">${p.terr}</span><span class="pct">${pct}%</span>${effects}</div>`;
+    return`<div class="pb ${isCur?'current':''}" style="color:${p.color};border-color:${p.color};background:${isCur?p.color+'22':'transparent'}">${p.name}<span class="pb-score">${p.terr}</span><span class="pct">${pct}%</span></div>`;
   }).join('');
 }
-
 function renderTurnBadge(){
   const p=G.players[G.curP];
   const tb=document.getElementById('turnBadge');
@@ -751,9 +378,8 @@ function renderTurnBadge(){
   tb.style.background=p.color+'22';
   tb.style.border=`2px solid ${p.color}`;
 }
-
 function showScorePop(cell,n,color){
-  const el=document.querySelector(`.cell[data-r="${cell[0]}"][data-c="${cell[1]}"]`);
+  const el=q(`.cell[data-r="${cell[0]}"][data-c="${cell[1]}"]`);
   if(!el)return;
   const rect=el.getBoundingClientRect();
   const pop=document.createElement('div');
@@ -770,11 +396,9 @@ function showScorePop(cell,n,color){
 function endGame(){
   G.over=true;showS('end');
   updateTerritory();
-  // Use totalCaptured for ranking (includes bomb bonus)
-  const sorted=[...G.players].sort((a,b)=>b.totalCaptured!==a.totalCaptured?b.totalCaptured-a.totalCaptured:b.big-a.big);
+  const sorted=[...G.players].sort((a,b)=>b.terr!==a.terr?b.terr-a.terr:b.big-a.big);
   const medals=['🥇','🥈','🥉','4️⃣'];
-  const playable=countPlayable();
-  document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.totalCaptured} casillas (${Math.round(p.totalCaptured/playable*100)}%)</span><div style="font-size:.7em;color:var(--dim)">Mejor jugada:+${p.big}</div></div>`).join('');
+  document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.terr} casillas (${Math.round(p.terr/(G.rows*G.cols)*100)}%)</span><div style="font-size:.7em;color:var(--dim)">Mejor jugada:+${p.big}</div></div>`).join('');
 }
 
 // ===================== ABOUT / RULES =====================
@@ -823,21 +447,8 @@ function showRules(){
       <li>Las casillas capturadas cambian a <strong>tu color</strong></li>
       <li>Si eliges un color sin casillas libres conectadas: pierdes el turno (¡cuenta como parada!)</li>
     </ul>
-
-    <h3 style="color:var(--accent);margin:12px 0 6px">🧱 Muros (Obstáculos)</h3>
-    <p>Algunas casillas son <strong>muros</strong> de piedra que <strong>nadie puede capturar</strong>. Bloquean la expansión de la inundación — ¡planifica tu ruta alrededor de ellos! Los muros garantizan que todas las esquinas sigan conectadas.</p>
-
-    <h3 style="color:var(--accent);margin:12px 0 6px">⭐ Power-ups</h3>
-    <p>Casillas especiales con brillo que otorgan <strong>habilidades</strong> al capturarlas:</p>
-    <ul>
-      <li>💣 <strong>Bomba:</strong> Captura 3 casillas libres adicionales adyacentes a tu territorio (explosión)</li>
-      <li>🛡️ <strong>Escudo:</strong> Protege tu territorio por 3 turnos — los rivales no pueden capturar tus casillas</li>
-      <li>⚡ <strong>Robo:</strong> ¡Roba 3 casillas al jugador con más territorio!</li>
-      <li>🔄 <strong>Doble:</strong> Tu próxima captura vale ×2 en la puntuación mostrada</li>
-    </ul>
-
     <p><strong>Fin del juego:</strong> Cuando no quedan casillas libres (o nadie puede capturar).</p>
-    <p><strong>Victoria:</strong> Quien capture <strong>más casillas</strong> (incluyendo bonus de bombas) gana. En empate, gana la mejor jugada más grande.</p>
+    <p><strong>Victoria:</strong> Quien capture <strong>más casillas</strong> gana. En empate, gana la mejor jugada única más grande.</p>
     <p><strong>Tip:</strong> Cuando dos inundaciones rivales se encuentran, pelean por las casillas restantes. ¡Captura zonas grandes y no dejes pasillos para el enemigo!</p>
     <button class="btn btn-p" onclick="document.getElementById('rulesOv').classList.remove('show')" style="margin-top:12px">Entendido</button>`;
   document.getElementById('rulesOv').classList.add('show');
