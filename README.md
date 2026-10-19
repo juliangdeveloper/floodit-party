@@ -28,3 +28,5 @@ Un solo `index.html` con HTML, CSS y JavaScript vanilla. Sin dependencias ni ser
 ---
 
 Más proyectos: https://juliangdeveloper.github.io/
+
+Hecho con ❤️ y 🌊
