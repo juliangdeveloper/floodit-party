@@ -12,7 +12,7 @@
 - Si el color que eliges no captura nada, pierdes el turno.
 - Muros 🧱 que nadie puede capturar y power-ups: 💣 bomba, ❄️ congelar a un rival, ⚡ robar casillas y 🔄 doble puntuación.
 - Ajustas colores (4 a 6), tamaño del tablero y densidad de muros.
-- Gana quien capture más casillas cuando ya no quedan libres.
+- Gana quien capture más casillas cuando ya no quedan libres o nadie puede capturar más.
 
 ## El paper
 Flood-It es NP-difícil: [Clifford, Jalsenius, Montanaro y Sach, *The Complexity of Flood Filling Games* (arXiv:1001.4420)](https://arxiv.org/abs/1001.4420). El botón 📄 del juego lo resume.
