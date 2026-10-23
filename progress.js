@@ -1,29 +1,29 @@
-// Flood-It Party progress. Numbers only; player names stay out of the save.
+// Flood-It Party progress. Numbers only; player names stay out of the record.
 
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 const SLUG = 'floodit-party';
 const SAVE_KEY = 'floodit-party.save';
 
-// Stable stat keys. Values are counts, totals, or bests from finished games.
-const STAT_KEYS = [
-  'games_played', // partidas terminadas
-  'human_wins', // el primer puesto lo ocupó un humano
-  'hard_wins', // victoria humana con una IA difícil en la mesa
-  'best_capture', // mayor inundación en una jugada, en casillas
-  'best_score', // más casillas capturadas por un jugador en una partida
-  'cells_captured', // casillas capturadas entre todos los jugadores
-  'turns_played', // turnos jugados
-  'wasted_turns', // turnos que no capturaron casillas
-  'powerups_taken', // power-ups recogidos
-  'bombs_used', // bombas activadas
-  'freezes_used', // congelaciones activadas
-  'steals_used', // robos activados
-  'doubles_used', // dobles activados
-  'wall_games', // partidas con al menos un muro
-  'four_player_games', // partidas de 4 jugadores
-  'six_color_games', // partidas con 6 colores
-  'big_board_games', // partidas en el tablero grande (18×14)
-  'full_clears' // partidas terminadas sin casillas libres
+// Declared stat keys, in write order. Every one is a total, a count, or a best.
+const STATS = [
+  { key: 'games_played', monotonic: true }, // partidas terminadas
+  { key: 'human_wins', monotonic: true }, // el primer puesto lo ocupó un humano
+  { key: 'hard_wins', monotonic: true }, // victoria humana con una IA difícil en la mesa
+  { key: 'best_capture', monotonic: true }, // mayor inundación en una jugada, en casillas
+  { key: 'best_score', monotonic: true }, // más casillas capturadas por un jugador en una partida
+  { key: 'cells_captured', monotonic: true }, // casillas capturadas entre todos los jugadores
+  { key: 'turns_played', monotonic: true }, // turnos jugados
+  { key: 'wasted_turns', monotonic: true }, // turnos que no capturaron casillas
+  { key: 'powerups_taken', monotonic: true }, // power-ups recogidos
+  { key: 'bombs_used', monotonic: true }, // bombas activadas
+  { key: 'freezes_used', monotonic: true }, // congelaciones activadas
+  { key: 'steals_used', monotonic: true }, // robos activados
+  { key: 'doubles_used', monotonic: true }, // dobles activados
+  { key: 'wall_games', monotonic: true }, // partidas con al menos un muro
+  { key: 'four_player_games', monotonic: true }, // partidas de 4 jugadores
+  { key: 'six_color_games', monotonic: true }, // partidas con 6 colores
+  { key: 'big_board_games', monotonic: true }, // partidas en el tablero grande (18×14)
+  { key: 'full_clears', monotonic: true } // partidas terminadas sin casillas libres
 ];
 
 // Stable achievement ids. `when` reads the stat snapshot above.
@@ -52,32 +52,18 @@ function store() {
   return null;
 }
 
-function readRawSave() {
-  try {
-    const local = store();
-    if (!local) return {};
-    const raw = local.getItem(SAVE_KEY);
-    if (!raw) return {};
-    const data = JSON.parse(raw);
-    if (!data || typeof data !== 'object' || Array.isArray(data)) return {};
-    return data;
-  } catch {
-    return {};
-  }
-}
-
 function emptyStats() {
   const stats = {};
-  for (const key of STAT_KEYS) stats[key] = 0;
+  for (const entry of STATS) stats[entry.key] = 0;
   return stats;
 }
 
 function statsFromSave(save) {
   const stats = emptyStats();
   if (!save || typeof save !== 'object') return stats;
-  for (const key of STAT_KEYS) {
-    const num = save[key];
-    if (typeof num === 'number' && Number.isFinite(num)) stats[key] = num;
+  for (const entry of STATS) {
+    const num = save[entry.key];
+    if (typeof num === 'number' && Number.isFinite(num)) stats[entry.key] = num;
   }
   return stats;
 }
@@ -87,23 +73,45 @@ function logrosFromSave(save) {
   return ACHIEVEMENTS.filter((item) => item.when(stats)).map((item) => item.id).sort();
 }
 
+// Read-only. Existing save keys are never rewritten.
 function loadSave() {
-  return statsFromSave(readRawSave());
-}
-
-function writeSave(stats) {
   try {
     const local = store();
-    if (!local) return;
-    const next = { ...readRawSave() };
-    for (const key of STAT_KEYS) {
-      const num = stats[key];
-      if (typeof num === 'number' && Number.isFinite(num)) next[key] = num;
-    }
-    local.setItem(SAVE_KEY, JSON.stringify(next));
+    if (!local) return emptyStats();
+    const raw = local.getItem(SAVE_KEY);
+    if (!raw) return emptyStats();
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return emptyStats();
+    return statsFromSave(data);
   } catch {
-    // A failed write must not stop the finished-game screen.
+    return emptyStats();
   }
+}
+
+function readMetaStats() {
+  try {
+    const local = store();
+    if (!local) return null;
+    const raw = local.getItem(metaKey(SLUG));
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+    if (data.v !== 1 || data.slug !== SLUG) return null;
+    return statsFromSave(data.stats);
+  } catch {
+    return null;
+  }
+}
+
+let latestStats = null;
+
+function resetMatchTotals() {
+  latestStats = null;
+}
+
+function baseStats() {
+  if (latestStats) return statsFromSave(latestStats);
+  return readMetaStats() || loadSave();
 }
 
 function count(value) {
@@ -118,7 +126,7 @@ function rankPlayers(players) {
 }
 
 function recordMatch(match) {
-  const save = loadSave();
+  const save = baseStats();
   const players = Array.isArray(match.players) ? match.players : [];
   const ranked = rankPlayers(players);
   const winner = ranked[0];
@@ -147,46 +155,32 @@ function recordMatch(match) {
   if (count(match.wallCount) > 0) save.wall_games += 1;
   if (count(match.unclaimed) === 0) save.full_clears += 1;
 
-  writeSave(save);
+  latestStats = save;
   return save;
 }
 
 function snapshotMeta() {
-  const save = loadSave();
-  return { stats: statsFromSave(save), logros: logrosFromSave(save) };
+  const stats = baseStats();
+  return { stats, logros: logrosFromSave(stats) };
 }
 
 function backfillMeta() {
-  return metaBackfill(SLUG, APP_VERSION, snapshotMeta);
+  return metaBackfill(SLUG, APP_VERSION, () => {
+    const stats = loadSave();
+    return { stats, logros: logrosFromSave(stats) };
+  });
 }
 
-let lastMetaAt = -Infinity;
-let metaTimer = null;
-
-// At most one write per second. A later call inside that window keeps the newest save.
 function queueMetaUpdate() {
-  const run = () => {
-    metaTimer = null;
-    lastMetaAt = Date.now();
-    try {
-      const snap = snapshotMeta();
-      metaUpdate(SLUG, APP_VERSION, snap);
-    } catch {
-      // Progress publishing never blocks the match.
-    }
-  };
-  const elapsed = Date.now() - lastMetaAt;
-  if (!(elapsed >= 0 && elapsed < 1000)) {
-    if (metaTimer) {
-      clearTimeout(metaTimer);
-      metaTimer = null;
-    }
-    run();
-    return;
+  try {
+    metaUpdate(SLUG, APP_VERSION, snapshotMeta());
+  } catch {
+    // Progress publishing never blocks the match.
   }
-  if (!metaTimer) metaTimer = setTimeout(run, 1000 - elapsed);
 }
 
+metaDeclare(STATS);
 globalThis.APP_VERSION = APP_VERSION;
 globalThis.SLUG = SLUG;
 globalThis.SAVE_KEY = SAVE_KEY;
+globalThis.STATS = STATS;
