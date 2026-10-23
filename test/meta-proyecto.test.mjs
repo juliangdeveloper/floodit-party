@@ -1,4 +1,3 @@
-// meta.v1 proyecto block: written when valid, left out when invalid, optional on read.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { beforeEach, after, test } from 'node:test';
@@ -103,7 +102,6 @@ test('a stored record with a different proyecto gets the current block on the ne
   assert.equal(rec.hitos.first_game, '2026-01-01T00:00:00.000Z');
   assert.equal(map.has(`${KEY}.corrupt`), false);
 
-  // With an invalid current block the stale one is dropped, not kept.
   metaSetProyecto({ fase: 9 });
   const second = useStorage({ [KEY]: JSON.stringify(old) });
   metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });

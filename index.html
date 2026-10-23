@@ -39,13 +39,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .toggle-switch input:checked+.toggle-slider{background:var(--accent)}
 .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);background:#fff}
 
-/* GAME */
 #game{padding:8px;width:100%}
 .g-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;padding:0 4px;margin-bottom:6px}
 .round-badge{background:var(--panel2);padding:6px 14px;border-radius:12px;font-weight:700;font-size:1em}
 .turn-badge{padding:6px 16px;border-radius:10px;font-weight:700;font-size:1em;transition:all .3s}
 
-/* BOARD */
 .board-wrap{display:flex;justify-content:center;margin:8px 0;overflow-x:auto}
 .board{display:grid;gap:1px;background:var(--cell-border);border-radius:8px;padding:2px;touch-action:manipulation}
 .cell{width:30px;height:30px;border-radius:4px;transition:all .15s;position:relative;display:flex;align-items:center;justify-content:center}
@@ -53,59 +51,46 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 @keyframes newCap{0%{transform:scale(.6);filter:brightness(3)}60%{transform:scale(1.15);filter:brightness(1.6)}100%{transform:scale(1);filter:brightness(1)}}
 .corner{outline:3px solid rgba(255,255,255,.85);outline-offset:-1px;z-index:3}
 
-/* WALL CELLS */
 .cell.wall{background:#2c2c3a!important;box-shadow:inset 2px 2px 4px rgba(0,0,0,.6),inset -1px -1px 3px rgba(80,80,100,.3);border:1px solid #1a1a28}
 .cell.wall::after{content:'🧱';font-size:10px;opacity:.5;position:absolute}
 
-/* POWER-UP CELLS */
 .cell.powerup{position:relative}
 .cell.powerup::before{content:'';position:absolute;inset:1px;border-radius:3px;border:2px solid;opacity:.7;pointer-events:none;animation:puGlow 1.5s ease-in-out infinite alternate}
 @keyframes puGlow{0%{opacity:.4;filter:brightness(1)}100%{opacity:.9;filter:brightness(1.3)}}
 .cell .pu-icon{font-size:12px;position:relative;z-index:2;filter:drop-shadow(0 0 2px rgba(0,0,0,.8))}
 
-/* Wave capture animation */
 .cell.capturing{animation:captureRipple .5s cubic-bezier(.25,.46,.45,.94)}
 @keyframes captureRipple{0%{transform:scale(.3);filter:brightness(.2)}50%{transform:scale(1.2);filter:brightness(3)}100%{transform:scale(1);filter:brightness(1)}}
 
-/* Frozen player indicator */
 .pb.frozen{background:rgba(100,200,255,.2)!important;border-color:#64c8ff!important}
 .pb.frozen::after{content:' ❄️'}
 
-/* Explosion ripple */
 .explosion{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,rgba(255,100,0,.8),rgba(255,50,0,.3),transparent);animation:explode .5s ease-out forwards;pointer-events:none;z-index:10}
 @keyframes explode{0%{transform:scale(0);opacity:1}100%{transform:scale(3);opacity:0}}
 
-/* Bomb particle explosion */
 .bomb-particle{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:12;animation:particleFly .7s ease-out forwards}
 @keyframes particleFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
 
-/* Screen shake */
 @keyframes screenShake{0%,100%{transform:translate(0)}10%{transform:translate(-4px,2px)}20%{transform:translate(4px,-2px)}30%{transform:translate(-3px,3px)}40%{transform:translate(3px,-1px)}50%{transform:translate(-2px,2px)}60%{transform:translate(2px,-3px)}70%{transform:translate(-1px,1px)}80%{transform:translate(1px,-1px)}90%{transform:translate(-1px,0)}}
 .shake{animation:screenShake .5s ease-out}
 
-/* Freeze snowflakes */
 .snowflake{position:absolute;font-size:20px;pointer-events:none;z-index:50;animation:snowfall 2s ease-in forwards}
 @keyframes snowfall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(80px) rotate(360deg)}}
 
-/* Steal lightning flash */
 .lightning-flash{position:fixed;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,20,147,.5) 30%,rgba(255,255,255,.9) 50%,rgba(255,20,147,.5) 70%,transparent 100%);pointer-events:none;z-index:90;animation:lightningBolt .4s ease-out forwards}
 @keyframes lightningBolt{0%{opacity:1;clip-path:inset(0 100% 0 0)}30%{opacity:1;clip-path:inset(0 0 0 0)}100%{opacity:0;clip-path:inset(0 0 0 0)}}
 
-/* Double glow pulse on player bar */
 .pb.double-active{animation:doublePulse 0.6s ease-in-out infinite alternate}
 @keyframes doublePulse{0%{box-shadow:0 0 6px rgba(255,215,0,.3)}100%{box-shadow:0 0 18px rgba(255,215,0,.8),0 0 30px rgba(255,215,0,.4)}}
 
-/* Steal swipe */
 .swipe{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,0,100,.6),transparent);animation:swipeAnim .4s ease-out forwards;pointer-events:none;z-index:10}
 @keyframes swipeAnim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 
-/* COLOR PICKER */
 .picker{display:flex;gap:8px;justify-content:center;margin:10px 0;flex-wrap:wrap}
 .pbtn{width:44px;height:44px;border-radius:50%;border:3px solid #333;cursor:pointer;transition:all .15s}
 .pbtn:hover:not(:disabled){transform:scale(1.25);border-color:#fff;box-shadow:0 0 14px rgba(255,255,255,.3)}
 .pbtn:disabled{opacity:.35;cursor:default;transform:none;border-color:#333}
 
-/* PLAYERS */
 .player-bar{display:flex;gap:8px;justify-content:center;margin:6px 0;flex-wrap:wrap}
 .pb{padding:6px 14px;border-radius:10px;font-weight:700;font-size:.85em;border:2px solid transparent;transition:all .3s;opacity:.55}
 .pb.current{opacity:1;transform:scale(1.1);box-shadow:0 0 12px rgba(255,255,255,.15)}
@@ -113,13 +98,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .pb .pct{display:block;font-size:.68em;font-weight:600;opacity:.8}
 .pb .pb-effects{display:inline;margin-left:4px;font-size:.85em}
 
-/* SCORE POP */
 .score-pop{position:fixed;pointer-events:none;font-size:1.5em;font-weight:900;z-index:100;text-shadow:0 2px 8px rgba(0,0,0,.8);animation:popUp .8s ease-out forwards}
 @keyframes popUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-50px) scale(1.4)}}
 
 .msg{background:rgba(233,69,96,.12);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;text-align:center;font-weight:600;font-size:.9em;margin-top:8px;max-width:700px;width:100%}
 
-/* OVERLAYS */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px}
 .overlay.show{display:flex}
 .overlay-card{background:var(--panel);border-radius:20px;padding:24px;max-width:520px;width:100%;text-align:center;border:2px solid var(--accent);max-height:85vh;overflow-y:auto}
@@ -129,7 +112,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .overlay-card .theorem{background:rgba(233,69,96,.1);border-left:3px solid var(--accent);padding:10px;margin:8px 0;font-size:.85em;border-radius:0 8px 8px 0;font-style:italic}
 .overlay-card ul{text-align:left;padding-left:20px;margin:8px 0;font-size:.9em;line-height:1.7}
 
-/* END */
 #end{text-align:center;padding-top:20px}
 #end h1{font-size:2.2em;margin-bottom:8px;background:linear-gradient(135deg,#e74c3c,#3498db,#2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .end-rank{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border-radius:12px;margin:5px 0;max-width:450px}
@@ -138,7 +120,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .er-name{flex:1;text-align:left;font-weight:600}
 .er-score{font-weight:700;color:var(--accent)}
 
-/* ===== TITLE SHIMMER ===== */
 #menu h1{
   background-size:200% 200%;
   animation:shimmer 3s ease-in-out infinite;
@@ -149,22 +130,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   100%{background-position:0% 50%}
 }
 
-/* ===== BUTTON HOVER ENHANCED ===== */
 .btn{transition:all .25s cubic-bezier(.4,0,.2,1)}
 .btn-p:hover{transform:scale(1.07);box-shadow:0 6px 24px rgba(233,69,96,.5);filter:brightness(1.12)}
 .btn-s:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(0,0,0,.3);background:#4a4a5a}
 
-/* ===== MESSAGE BAR AUTO-HIDE ===== */
 .msg{transition:opacity .5s ease-out}
 .msg.fade-out{opacity:0}
 
-/* ===== ROUND/TURN PULSE ===== */
 .round-badge{animation:roundPulse 2s ease-in-out infinite}
 .turn-badge{animation:turnPulse 2.5s ease-in-out infinite}
 @keyframes roundPulse{0%,100%{box-shadow:0 0 0 rgba(233,69,96,0)}50%{box-shadow:0 0 12px rgba(233,69,96,.25)}}
 @keyframes turnPulse{0%,100%{box-shadow:0 0 0 rgba(255,255,255,0)}50%{box-shadow:0 0 10px rgba(255,255,255,.15)}}
 
-/* ===== CONFETTI ===== */
 .confetti{position:fixed;pointer-events:none;z-index:200;width:10px;height:10px;border-radius:2px;animation:confettiFall 3.5s ease-out forwards}
 @keyframes confettiFall{
   0%{opacity:1;transform:translateY(-20px) rotate(0deg) scale(1)}
@@ -172,14 +149,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   100%{opacity:0;transform:translateY(100vh) rotate(720deg) scale(.3)}
 }
 
-/* ===== END SCREEN ENHANCED ===== */
 #winner-crown{font-size:4em;animation:crownBounce 1.2s ease-in-out infinite alternate;filter:drop-shadow(0 0 20px rgba(245,166,35,.6))}
 @keyframes crownBounce{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-8px) scale(1.05)}}
 .end-rank{transition:all .3s}
 .end-rank:hover{transform:translateX(6px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .end-score-breakdown{font-size:.75em;color:var(--dim);margin-top:2px}
 
-/* ===== MOBILE RESPONSIVE ===== */
 @media(max-width:480px){
   :root{--cell-size:24px}
   .cell{width:24px!important;height:24px!important}
@@ -283,36 +258,31 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="rulesOv"><div class="overlay-card" id="rulesCard"></div></div>
 <div class="overlay" id="aboutOv"><div class="overlay-card" id="aboutCard"></div></div>
 
-<script src="meta.js?v=1.0.4"></script>
-<script src="progress.js?v=1.0.4"></script>
+<script src="meta.js?v=1.0.5"></script>
+<script src="progress.js?v=1.0.5"></script>
 <script>
-// Tablero base (no cambia); owner[r][c] = índice de jugador o -1 si libre
 const PALETTE=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
 const COLOR_NAMES=['Rojo','Azul','Verde','Amarillo','Morado','Naranja'];
 const PCOL=['#2dd4bf','#f97316','#ec4899','#84cc16'];
-const CORNERS=[[0,0],[-1,-1],[0,-1],[-1,0]]; // según nº jugadores se toman las primeras
+const CORNERS=[[0,0],[-1,-1],[0,-1],[-1,0]];
 
-// Power-up definitions
 const PU_TYPES=['bomb','freeze','steal','double'];
-const PU_DIST=[0.35,0.30,0.20,0.15]; // cumulative not needed, just weights
+const PU_DIST=[0.35,0.30,0.20,0.15];
 const PU_EMOJI={bomb:'💣',freeze:'❄️',steal:'⚡',double:'🔄'};
 const PU_GLOW={bomb:'#ff4500',freeze:'#64c8ff',steal:'#ff1493',double:'#ffd700'};
 
 let G={grid:[],owner:[],cellType:[],powerupType:[],rows:11,cols:14,colors:5,players:[],curP:0,turns:0,animating:false,over:false,stall:0,specialEnabled:true,wallPct:8,wallCount:0};
 
-// ===================== SETUP =====================
 function setPC(n){document.querySelectorAll('#menu .cbtn').forEach((b,i)=>b.classList.toggle('on',i===n-2));renderPS(n)}
 function renderPS(n){let h='';for(let i=0;i<n;i++)h+=`<div class="pr"><label style="color:${PCOL[i]}">P${i+1}</label><input type="text" id="pn${i}" placeholder="Jugador ${i+1}" maxlength="10"><select id="pt${i}"><option value="human">Humano</option><option value="easy">IA Fácil</option><option value="medium">IA Media</option><option value="hard">IA Difícil</option></select></div>`;document.getElementById('pSetup').innerHTML=h}
 function getPC(){const a=document.querySelector('#menu .cbtn.on');return a?parseInt(a.textContent):2}
 function getCol(){return parseInt(document.querySelector('input[name=col]:checked')?.value||5)}
 function getBoardSize(){const v=document.querySelector('input[name=bsz]:checked')?.value||'med';return v==='small'?{c:10,r:8}:v==='big'?{c:18,r:14}:{c:14,r:11}}
 
-// Toggle wall density visibility
 document.getElementById('specialToggle').addEventListener('change',function(){
   document.getElementById('wallDensityWrap').style.display=this.checked?'block':'none';
 });
 
-// ===================== START =====================
 function startG(){
   const n=getPC();const bs=getBoardSize();
   G.cols=bs.c;G.rows=bs.r;G.colors=getCol();G.turns=0;G.over=false;G.animating=false;G.stall=0;
@@ -333,11 +303,9 @@ function startG(){
   showS('game');
 }
 
-// ===================== BOARD GENERATION =====================
 function generateBoard(){
   G.grid=[];G.owner=[];G.cellType=[];G.powerupType=[];G.wallCount=0;
 
-  // Generate colors
   for(let r=0;r<G.rows;r++){
     G.grid[r]=[];G.owner[r]=[];G.cellType[r]=[];G.powerupType[r]=[];
     for(let c=0;c<G.cols;c++){
@@ -348,20 +316,17 @@ function generateBoard(){
     }
   }
 
-  // Place corners first
   const cornerCells=new Set();
   for(let i=0;i<G.players.length;i++){
     const [rr,cc]=corner(i);
     cornerCells.add(rr*1000+cc);
   }
 
-  // Place walls if special cells enabled
   if(G.specialEnabled && G.wallPct>0){
     const totalCells=G.rows*G.cols;
     const targetWalls=Math.floor(totalCells*G.wallPct/100);
     const candidates=[];
 
-    // Collect candidate cells (not corners)
     for(let r=0;r<G.rows;r++){
       for(let c=0;c<G.cols;c++){
         if(!cornerCells.has(r*1000+c)){
@@ -370,19 +335,15 @@ function generateBoard(){
       }
     }
 
-    // Shuffle candidates
     shuffle(candidates);
 
     let placed=0;
     for(const [r,c] of candidates){
       if(placed>=targetWalls)break;
-      // Temporarily place wall
       G.cellType[r][c]='wall';
       G.wallCount++;
 
-      // Check connectivity: all corners must still be reachable from each other via non-wall cells
       if(!checkBoardConnectivity(cornerCells)){
-        // Undo wall placement
         G.cellType[r][c]='normal';
         G.wallCount--;
       }else{
@@ -391,7 +352,6 @@ function generateBoard(){
     }
   }
 
-  // Place power-ups on remaining normal, non-corner cells
   if(G.specialEnabled){
     const puCandidates=[];
     for(let r=0;r<G.rows;r++){
@@ -410,7 +370,6 @@ function generateBoard(){
     }
   }
 
-  // Assign corners to players
   for(let i=0;i<G.players.length;i++){
     const [rr,cc]=corner(i);
     G.owner[rr][cc]=i;
@@ -434,17 +393,14 @@ function shuffle(arr){
   }
 }
 
-// BFS connectivity check: verify all corner cells can reach each other
 function checkBoardConnectivity(cornerCells){
   const corners=[...cornerCells];
   if(corners.length<=1)return true;
 
-  // BFS from first corner
   const start=corners[0];
   const sr=Math.floor(start/1000),sc=start%1000;
   const visited=bfsNonWall(sr,sc);
 
-  // All other corners must be reachable
   for(let i=1;i<corners.length;i++){
     const key=corners[i];
     if(!visited.has(key))return false;
@@ -476,22 +432,18 @@ function corner(i){
   return i===0?[0,0]:i===1?[G.rows-1,G.cols-1]:i===2?[0,G.cols-1]:[G.rows-1,0];
 }
 
-// ===================== CORE: FLOOD CAPTURE =====================
-// Captura en una copia de owner (para simulación). Devuelve {list:[[r,c]...], n, powerups:[puType...], waves:[[cells_at_dist_1],[dist_2],...]}
 function doCapture(owner,p,color){
   const captured=[];
   const capturedPowerups=[];
   const waves=[];
   const visited=new Set();
   const frontier=[];
-  // sembrar desde el territorio actual del jugador
   for(let r=0;r<G.rows;r++){
     for(let c=0;c<G.cols;c++){
       if(owner[r][c]!==p)continue;
       for(const[nr,nc]of nbors(r,c)){
         const key=nr*1000+nc;
         if(visited.has(key)||owner[nr][nc]!==-1||G.grid[nr][nc]!==color)continue;
-        // Skip walls
         if(G.cellType[nr][nc]==='wall')continue;
         visited.add(key);frontier.push([nr,nc]);
       }
@@ -504,7 +456,6 @@ function doCapture(owner,p,color){
       wave.push([r,c]);
       captured.push([r,c]);
       owner[r][c]=p;
-      // Check if this cell is a power-up
       if(G.cellType[r][c]==='powerup'&&G.powerupType[r][c]){
         capturedPowerups.push({r,c,type:G.powerupType[r][c]});
       }
@@ -532,11 +483,9 @@ function nbors(r,c){
   return a;
 }
 
-// ===================== POWER-UP EFFECTS =====================
 async function processPowerups(pIdx,puList){
   const p=G.players[pIdx];
   for(const pu of puList){
-    // Mark power-up as consumed (remove from board)
     G.cellType[pu.r][pu.c]='normal';
     G.powerupType[pu.r][pu.c]=null;
 
@@ -557,7 +506,6 @@ async function processPowerups(pIdx,puList){
 }
 
 async function doBomb(pIdx){
-  // Capture 3 random free cells adjacent to player territory
   const adjFree=[];
   for(let r=0;r<G.rows;r++){
     for(let c=0;c<G.cols;c++){
@@ -572,13 +520,11 @@ async function doBomb(pIdx){
   shuffle(adjFree);
   const toCapture=adjFree.slice(0,3);
 
-  // Screen shake
   const boardWrap=document.querySelector('.board-wrap');
   if(boardWrap){boardWrap.classList.add('shake');setTimeout(()=>boardWrap.classList.remove('shake'),500)}
 
   for(const[r,c]of toCapture){
     G.owner[r][c]=pIdx;
-    // Animate explosion + particle burst
     const el=document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
     if(el){
       const exp=document.createElement('div');
@@ -586,7 +532,6 @@ async function doBomb(pIdx){
       el.appendChild(exp);
       setTimeout(()=>exp.remove(),500);
 
-      // 8 particle divs radiating outward
       const colors=['#ff4500','#ff6347','#ffa500','#ffd700','#ff1493','#ff0000','#ff8c00','#ffff00'];
       for(let i=0;i<8;i++){
         const particle=document.createElement('div');
@@ -611,7 +556,6 @@ async function doBomb(pIdx){
 }
 
 function doFreeze(pIdx){
-  // Pick a random OTHER player to freeze
   const others=[];
   for(let i=0;i<G.players.length;i++){
     if(i!==pIdx)others.push(i);
@@ -621,7 +565,6 @@ function doFreeze(pIdx){
   G.players[target].frozenTurns=1;
   setMsg(`❄️ ¡${G.players[pIdx].name} congela a ${G.players[target].name}! Pierde su próximo turno`);
 
-  // Falling snowflakes over frozen player's bar
   const bar=document.getElementById('playerBar');
   if(bar){
     const pbEls=bar.querySelectorAll('.pb');
@@ -644,7 +587,6 @@ function doFreeze(pIdx){
 }
 
 async function doSteal(pIdx){
-  // Find player with most territory (excluding current)
   let target=-1,maxTerr=0;
   for(let i=0;i<G.players.length;i++){
     if(i===pIdx)continue;
@@ -652,7 +594,6 @@ async function doSteal(pIdx){
   }
   if(target<0)return;
 
-  // Remove 3 random cells from their territory
   const theirCells=[];
   for(let r=0;r<G.rows;r++){
     for(let c=0;c<G.cols;c++){
@@ -674,7 +615,6 @@ async function doSteal(pIdx){
   if(toSteal.length>0){
     setMsg(`⚡ ¡${G.players[pIdx].name} roba ${toSteal.length} casillas de ${G.players[target].name}!`);
 
-    // Lightning flash overlay
     const flash=document.createElement('div');
     flash.className='lightning-flash';
     document.body.appendChild(flash);
@@ -688,18 +628,15 @@ function doDouble(pIdx){
   G.players[pIdx].doubleReady=true;
   setMsg(`🔄 ¡${G.players[pIdx].name} activa Doble! Su próxima captura vale x2`);
 
-  // Trigger re-render so double-active class appears on player bar
   renderPlayerBar();
 }
 
-// ===================== TURN =====================
 function startTurn(){
   if(G.over)return;
   const p=G.players[G.curP];
   updateTerritory();
   renderPlayerBar();
 
-  // Check if player is frozen — skip turn
   if(p.frozenTurns>0){
     p.frozenTurns--;
     renderPicker(p);
@@ -732,19 +669,16 @@ async function processTurn(color){
   const res=doCapture(G.owner,p,color);
   G.turns++;
 
-  // Apply double multiplier for display
   let displayN=res.n;
   if(player.doubleReady&&res.n>0){
     displayN=res.n*2;
     player.doubleReady=false;
   }
 
-  // Track total captured (for end screen scoring)
   player.totalCaptured+=res.n;
   if(res.n>G.bestFlood)G.bestFlood=res.n;
   if(res.powerups.length)G.powerups+=res.powerups.length;
 
-  // Wave-by-wave animation
   if(res.waves&&res.waves.length>0){
     for(let w=0;w<res.waves.length;w++){
       const wave=res.waves[w];
@@ -769,7 +703,6 @@ async function processTurn(color){
   }
   await sleep(500);
 
-  // Process captured power-ups
   if(res.powerups.length>0){
     await processPowerups(p,res.powerups);
     renderBoard();
@@ -778,7 +711,6 @@ async function processTurn(color){
     await sleep(400);
   }
 
-  // avanzar / terminar
   if(res.n===0){G.stall++;G.wasted++}else{G.stall=0}
 
   const unclaimed=countUnclaimed();
@@ -804,7 +736,6 @@ function updateTerritory(){
   for(let r=0;r<G.rows;r++)for(let c=0;c<G.cols;c++)if(G.owner[r][c]>=0)G.players[G.owner[r][c]].terr++;
 }
 
-// ===================== AI =====================
 function aiTurn(){
   const pType=G.players[G.curP].type;
   const colors=[...Array(G.colors).keys()];
@@ -812,7 +743,6 @@ function aiTurn(){
   if(pType==='easy'){
     pick=colors[Math.floor(Math.random()*colors.length)];
   }else if(pType==='medium'){
-    // codicioso: color que captura más
     let best=-1,bestN=-1;
     for(const c of colors){
       const o=cloneOwner();const n=doCapture(o,G.curP,c).n;
@@ -820,11 +750,9 @@ function aiTurn(){
     }
     pick=best;
   }else{
-    // difícil: lookahead 1 (yo + mejor respuesta mía siguiente)
     let best=-1,bestVal=-Infinity;
     for(const c of colors){
       const o=cloneOwner();const n1=doCapture(o,G.curP,c).n;
-      // mejor segunda jugada desde ese estado
       let n2=0;
       for(const c2 of colors){const oo=cloneOf(o);const nn=doCapture(oo,G.curP,c2).n;if(nn>n2)n2=nn}
       const val=n1+0.6*n2;
@@ -832,14 +760,12 @@ function aiTurn(){
     }
     pick=best;
   }
-  // llamar directo a processTurn (chooseColor filtra humanos)
   processTurn(pick);
 }
 
 function cloneOwner(){return G.owner.map(r=>[...r])}
 function cloneOf(o){return o.map(r=>[...r])}
 
-// ===================== RENDER =====================
 function renderAll(){
   renderBoard();renderPlayerBar();renderTurnBadge();
   document.getElementById('turnCount').textContent=`Turno ${G.turns+1}`;
@@ -874,12 +800,10 @@ function renderBoard(){
   }
   board.innerHTML=html;
 
-  // Apply power-up glow borders via inline style (CSS custom property)
   document.querySelectorAll('.cell.powerup').forEach(el=>{
     const glow=el.style.getPropertyValue('--pu-glow');
     if(glow){
       el.querySelector(':scope')?.style.setProperty('--pu-glow',glow);
-      // Apply via the ::before pseudo element using a style injection
       const r=el.dataset.r,c=el.dataset.c;
       const puT=G.powerupType[r]?.[c];
       if(puT){
@@ -943,23 +867,19 @@ function showScorePop(cell,n,color){
   setTimeout(()=>pop.remove(),800);
 }
 
-// ===================== END =====================
 function endGame(){
   G.over=true;
   updateTerritory();
   saveFinishedMatch();
   showS('end');
-  // Use totalCaptured for ranking (includes bomb bonus)
   const sorted=rankPlayers(G.players);
   const medals=['🥇','🥈','🥉','4️⃣'];
   const playable=countPlayable();
   document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.totalCaptured} casillas (${Math.round(p.totalCaptured/playable*100)}%)</span><div class="end-score-breakdown">Mejor jugada: +${p.big} · Capturas: ${p.totalCaptured}</div></div>`).join('');
 
-  // Spawn confetti
   spawnConfetti();
 }
 
-// ===================== ABOUT / RULES =====================
 function showAbout(){
   document.getElementById('aboutCard').innerHTML=`
     <h2>📄 El Paper Científico</h2>
@@ -1025,7 +945,6 @@ function showRules(){
   document.getElementById('rulesOv').classList.add('show');
 }
 
-// ===================== UI =====================
 function showS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 let _msgTimer=null;
 function setMsg(m){
@@ -1037,7 +956,6 @@ function setMsg(m){
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-// ===================== CONFETTI =====================
 function spawnConfetti(){
   const colors=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#ff69b4','#00ced1'];
   for(let i=0;i<30;i++){
@@ -1074,7 +992,6 @@ function saveFinishedMatch(){
     });
     queueMetaUpdate();
   }catch{
-    // A storage failure must still leave the results on screen.
   }
 }
 

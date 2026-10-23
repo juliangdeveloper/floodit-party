@@ -1,45 +1,42 @@
-// Flood-It Party progress. Numbers only; player names stay out of the record.
 
-const APP_VERSION = '1.0.4';
+const APP_VERSION = '1.0.5';
 const SLUG = 'floodit-party';
 const SAVE_KEY = 'floodit-party.save';
 
-// Declared stat keys, in write order. Every one is a total, a count, or a best.
 const STATS = [
-  { key: 'games_played', monotonic: true }, // partidas terminadas
-  { key: 'human_wins', monotonic: true }, // el primer puesto lo ocupó un humano
-  { key: 'hard_wins', monotonic: true }, // victoria humana con una IA difícil en la mesa
-  { key: 'best_capture', monotonic: true }, // mayor inundación en una jugada, en casillas
-  { key: 'best_score', monotonic: true }, // más casillas capturadas por un jugador en una partida
-  { key: 'cells_captured', monotonic: true }, // casillas capturadas entre todos los jugadores
-  { key: 'turns_played', monotonic: true }, // turnos jugados
-  { key: 'wasted_turns', monotonic: true }, // turnos que no capturaron casillas
-  { key: 'powerups_taken', monotonic: true }, // power-ups recogidos
-  { key: 'bombs_used', monotonic: true }, // bombas activadas
-  { key: 'freezes_used', monotonic: true }, // congelaciones activadas
-  { key: 'steals_used', monotonic: true }, // robos activados
-  { key: 'doubles_used', monotonic: true }, // dobles activados
-  { key: 'wall_games', monotonic: true }, // partidas con al menos un muro
-  { key: 'four_player_games', monotonic: true }, // partidas de 4 jugadores
-  { key: 'six_color_games', monotonic: true }, // partidas con 6 colores
-  { key: 'big_board_games', monotonic: true }, // partidas en el tablero grande (18×14)
-  { key: 'full_clears', monotonic: true } // partidas terminadas sin casillas libres
+  { key: 'games_played', monotonic: true },
+  { key: 'human_wins', monotonic: true },
+  { key: 'hard_wins', monotonic: true },
+  { key: 'best_capture', monotonic: true },
+  { key: 'best_score', monotonic: true },
+  { key: 'cells_captured', monotonic: true },
+  { key: 'turns_played', monotonic: true },
+  { key: 'wasted_turns', monotonic: true },
+  { key: 'powerups_taken', monotonic: true },
+  { key: 'bombs_used', monotonic: true },
+  { key: 'freezes_used', monotonic: true },
+  { key: 'steals_used', monotonic: true },
+  { key: 'doubles_used', monotonic: true },
+  { key: 'wall_games', monotonic: true },
+  { key: 'four_player_games', monotonic: true },
+  { key: 'six_color_games', monotonic: true },
+  { key: 'big_board_games', monotonic: true },
+  { key: 'full_clears', monotonic: true }
 ];
 
-// Stable achievement ids. `when` reads the stat snapshot above.
 const ACHIEVEMENTS = [
-  { id: 'first_game', when: (s) => s.games_played >= 1 }, // terminar 1 partida
-  { id: 'ten_games', when: (s) => s.games_played >= 10 }, // terminar 10 partidas
-  { id: 'fifty_games', when: (s) => s.games_played >= 50 }, // terminar 50 partidas
-  { id: 'first_win', when: (s) => s.human_wins >= 1 }, // un humano queda primero
-  { id: 'ten_wins', when: (s) => s.human_wins >= 10 }, // un humano queda primero 10 veces
-  { id: 'big_wave', when: (s) => s.best_capture >= 20 }, // una inundación de 20 casillas
-  { id: 'tidal_wave', when: (s) => s.best_capture >= 40 }, // una inundación de 40 casillas
-  { id: 'power_10', when: (s) => s.powerups_taken >= 10 }, // recoger 10 power-ups
-  { id: 'hard_win', when: (s) => s.hard_wins >= 1 }, // un humano gana ante una IA difícil
-  { id: 'four_players', when: (s) => s.four_player_games >= 1 }, // terminar una partida de 4
-  { id: 'six_colors', when: (s) => s.six_color_games >= 1 }, // terminar una partida de 6 colores
-  { id: 'full_board', when: (s) => s.full_clears >= 1 } // terminar sin casillas libres
+  { id: 'first_game', when: (s) => s.games_played >= 1 },
+  { id: 'ten_games', when: (s) => s.games_played >= 10 },
+  { id: 'fifty_games', when: (s) => s.games_played >= 50 },
+  { id: 'first_win', when: (s) => s.human_wins >= 1 },
+  { id: 'ten_wins', when: (s) => s.human_wins >= 10 },
+  { id: 'big_wave', when: (s) => s.best_capture >= 20 },
+  { id: 'tidal_wave', when: (s) => s.best_capture >= 40 },
+  { id: 'power_10', when: (s) => s.powerups_taken >= 10 },
+  { id: 'hard_win', when: (s) => s.hard_wins >= 1 },
+  { id: 'four_players', when: (s) => s.four_player_games >= 1 },
+  { id: 'six_colors', when: (s) => s.six_color_games >= 1 },
+  { id: 'full_board', when: (s) => s.full_clears >= 1 }
 ];
 
 function store() {
@@ -47,7 +44,6 @@ function store() {
     const local = globalThis.localStorage;
     if (local && typeof local.getItem === 'function') return local;
   } catch {
-    // Ignore unavailable storage.
   }
   return null;
 }
@@ -73,7 +69,6 @@ function logrosFromSave(save) {
   return ACHIEVEMENTS.filter((item) => item.when(stats)).map((item) => item.id).sort();
 }
 
-// Read-only. Existing save keys are never rewritten.
 function loadSave() {
   try {
     const local = store();
@@ -118,7 +113,6 @@ function count(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }
 
-// Same order as the results screen: cells captured, then largest single play.
 function rankPlayers(players) {
   return [...players].sort((a, b) => (
     b.totalCaptured !== a.totalCaptured ? b.totalCaptured - a.totalCaptured : b.big - a.big
@@ -175,7 +169,6 @@ function queueMetaUpdate() {
   try {
     metaUpdate(SLUG, APP_VERSION, snapshotMeta());
   } catch {
-    // Progress publishing never blocks the match.
   }
 }
 
