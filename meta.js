@@ -260,7 +260,17 @@ function metaFlush() {
 function metaReset() {
   lastWriteAt = -Infinity;
   pendingWrite = null;
+  flushBound = false;
   clearWriteTimer();
+}
+
+function onVisibilityChange() {
+  try {
+    const doc = globalThis.document;
+    if (doc && doc.visibilityState === 'hidden') metaFlush();
+  } catch {
+    // A visibility read must not affect the match.
+  }
 }
 
 function bindFlush() {
@@ -269,6 +279,7 @@ function bindFlush() {
     const listen = globalThis.addEventListener;
     if (typeof listen !== 'function') return;
     listen.call(globalThis, 'pagehide', metaFlush);
+    listen.call(globalThis, 'visibilitychange', onVisibilityChange);
     listen.call(globalThis, 'unload', metaFlush);
     flushBound = true;
   } catch {

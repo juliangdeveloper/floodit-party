@@ -122,12 +122,16 @@ describe('meta.v1 migration', { concurrency: false }, () => {
     resetMatchTotals();
     delete sandbox.window;
     delete sandbox.location;
+    delete sandbox.document;
+    delete sandbox.addEventListener;
   });
 
   afterEach(() => {
     mock.timers.reset();
     delete sandbox.window;
     delete sandbox.location;
+    delete sandbox.document;
+    delete sandbox.addEventListener;
   });
 
   test('an old save without the meta key produces a record from that save', () => {
@@ -429,22 +433,68 @@ describe('meta.v1 migration', { concurrency: false }, () => {
     assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 6);
   });
 
-  test('pagehide flushes a pending change and unload does not write again', () => {
+  test('pagehide and visibility hidden flush a pending change inside one second', () => {
+    mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+    const written = [];
+    const messages = [];
     const handlers = {};
+    const orig = sandbox.localStorage.setItem;
+    sandbox.localStorage.setItem = (key, value) => {
+      written.push(key);
+      orig.call(sandbox.localStorage, key, value);
+    };
     sandbox.addEventListener = (type, fn) => {
       handlers[type] = fn;
     };
+    sandbox.document = { visibilityState: 'visible' };
+    sandbox.window = {
+      parent: {
+        postMessage() {
+          messages.push('meta');
+        }
+      }
+    };
+    sandbox.location = { origin: 'https://juliangdeveloper.github.io', search: '' };
     sandbox.localStorage.setItem(SAVE_KEY, JSON.stringify({ games_played: 1 }));
+
     backfillMeta();
     assert.equal(typeof handlers.pagehide, 'function');
-    assert.equal(typeof handlers.unload, 'function');
+    assert.equal(typeof handlers.visibilitychange, 'function');
+    assert.equal(metaWrites(written), 1);
+    assert.equal(messages.length, 1);
 
-    metaUpdate(SLUG, APP_VERSION, { stats: { games_played: 3 }, logros: ['first_game'] });
+    metaUpdate(SLUG, APP_VERSION, { stats: { games_played: 4 }, logros: ['first_game'] });
+    assert.equal(metaWrites(written), 1);
     assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 1);
+
+    handlers.visibilitychange();
+    assert.equal(metaWrites(written), 1);
+
     handlers.pagehide();
-    assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 3);
-    const afterHide = sandbox.localStorage.getItem(META_KEY);
-    handlers.unload();
-    assert.equal(sandbox.localStorage.getItem(META_KEY), afterHide);
+    assert.equal(metaWrites(written), 2);
+    assert.equal(messages.length, 2);
+    assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 4);
+
+    const afterFlush = sandbox.localStorage.getItem(META_KEY);
+    handlers.pagehide();
+    sandbox.document.visibilityState = 'hidden';
+    handlers.visibilitychange();
+    assert.equal(metaWrites(written), 2);
+    assert.equal(messages.length, 2);
+    assert.equal(sandbox.localStorage.getItem(META_KEY), afterFlush);
+
+    metaUpdate(SLUG, APP_VERSION, { stats: { games_played: 6 }, logros: ['first_game'] });
+    assert.equal(metaWrites(written), 2);
+    handlers.visibilitychange();
+    assert.equal(metaWrites(written), 3);
+    assert.equal(messages.length, 3);
+    assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 6);
+
+    const settled = sandbox.localStorage.getItem(META_KEY);
+    handlers.pagehide();
+    handlers.visibilitychange();
+    assert.equal(metaWrites(written), 3);
+    assert.equal(messages.length, 3);
+    assert.equal(sandbox.localStorage.getItem(META_KEY), settled);
   });
 });
