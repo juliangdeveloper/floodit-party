@@ -1,8 +1,4 @@
-// Shared meta.v1 progress record. Same behavior in every app.
 
-// Project status, set by hand and bumped with the version. Never computed from play.
-// fase 1-6: Idea, Definición, Diseño, Construcción, Validación, Lanzamiento y mantenimiento.
-// fase_estado 0-4: pendiente, en curso, bloqueada, en revisión, completada.
 var PROYECTO = {
   objetivo: 'Juego de fiesta por turnos de inundar colores, con muros y power-ups, para 2 a 4 jugadores humanos o IA.',
   fase: 6,
@@ -16,7 +12,6 @@ function proyectoInt(n, lo, hi) {
   return typeof n === 'number' && Number.isInteger(n) && n >= lo && n <= hi;
 }
 
-// Clean copy of a proyecto block, or null when any field is missing or out of range.
 function metaProyecto(p) {
   try {
     if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
@@ -29,12 +24,10 @@ function metaProyecto(p) {
   }
 }
 
-// Tests only: swap the block the writer uses (null restores PROYECTO).
 function metaSetProyecto(p) {
   proyectoSource = p === null ? PROYECTO : p;
 }
 
-// Adds the current proyecto block to a record being written, when it is valid.
 function withProyecto(record) {
   var p = metaProyecto(proyectoSource);
   if (p) record.proyecto = p;
@@ -56,7 +49,6 @@ function storage() {
     const store = globalThis.localStorage;
     if (store && typeof store.getItem === 'function' && typeof store.setItem === 'function') return store;
   } catch {
-    // Storage can throw just for being touched (blocked or disabled).
   }
   return null;
 }
@@ -141,7 +133,6 @@ function salvage(store, slug, raw) {
   try {
     store.setItem(`${metaKey(slug)}.corrupt`, String(raw));
   } catch {
-    // Keeping the copy is best-effort; the rebuilt record still has to land.
   }
 }
 
@@ -176,7 +167,6 @@ function postRecord(key, record) {
       frame.parent.postMessage({ type: 'meta', key, data: record }, globalThis.location.origin);
     }
   } catch {
-    // A parent that rejects the message must not affect the saved record.
   }
 }
 
@@ -205,7 +195,6 @@ function clearWriteTimer() {
   try {
     clearTimeout(writeTimer);
   } catch {
-    // The clock mock may already have dropped the timer.
   }
   writeTimer = null;
 }
@@ -257,7 +246,6 @@ function metaUpdate(slug, version, payload) {
   }
 }
 
-// Build the record once when the key is absent or unusable. A valid record is left as stored.
 function metaBackfill(slug, version, build) {
   try {
     bindFlush();
@@ -280,7 +268,6 @@ function metaBackfill(slug, version, build) {
   }
 }
 
-// Write a queued change immediately. No-op when nothing is waiting.
 function metaFlush() {
   try {
     if (metaIsDemo()) {
@@ -310,7 +297,6 @@ function onVisibilityChange() {
     const doc = globalThis.document;
     if (doc && doc.visibilityState === 'hidden') metaFlush();
   } catch {
-    // A visibility read must not affect the match.
   }
 }
 
@@ -324,7 +310,6 @@ function bindFlush() {
     listen.call(globalThis, 'unload', metaFlush);
     flushBound = true;
   } catch {
-    // The page can still flush by calling metaFlush.
   }
 }
 
