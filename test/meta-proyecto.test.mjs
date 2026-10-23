@@ -57,7 +57,7 @@ test('an invalid block is left out and never throws', () => {
   const bad = [
     'x', [], {},
     { ...P, objetivo: '' }, { ...P, objetivo: 'a'.repeat(141) }, { ...P, objetivo: 5 },
-    { ...P, fase: 0 }, { ...P, fase: 7 }, { ...P, fase: 2.5 }, { ...P, fase: '4' },
+    { ...P, fase: 0 }, { ...P, fase: 8 }, { ...P, fase: 2.5 }, { ...P, fase: '4' },
     { ...P, fase_estado: -1 }, { ...P, fase_estado: 5 },
     { ...P, fases_completadas: 7 }, { ...P, fases_completadas: NaN },
     { get objetivo() { throw new Error('boom'); } }
@@ -106,4 +106,9 @@ test('a stored record with a different proyecto gets the current block on the ne
   const second = useStorage({ [KEY]: JSON.stringify(old) });
   metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
   assert.equal('proyecto' in JSON.parse(second.get(KEY)), false);
+});
+
+test('fase 7 (Descartada) is accepted', () => {
+  const D = { ...PROYECTO, fase: 7, fase_estado: 4 };
+  assert.deepEqual(plain(metaProyecto(D)), plain(D));
 });
