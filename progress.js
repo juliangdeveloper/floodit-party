@@ -1,28 +1,28 @@
 
-const APP_VERSION = '1.0.6';
+const APP_VERSION = '1.0.7';
 const SLUG = 'floodit-party';
 const SAVE_KEY = 'floodit-party.save';
 
-const STATS = [
-  { key: 'games_played', monotonic: true },
-  { key: 'human_wins', monotonic: true },
-  { key: 'hard_wins', monotonic: true },
-  { key: 'best_capture', monotonic: true },
-  { key: 'best_score', monotonic: true },
-  { key: 'cells_captured', monotonic: true },
-  { key: 'turns_played', monotonic: true },
-  { key: 'wasted_turns', monotonic: true },
-  { key: 'powerups_taken', monotonic: true },
-  { key: 'bombs_used', monotonic: true },
-  { key: 'freezes_used', monotonic: true },
-  { key: 'steals_used', monotonic: true },
-  { key: 'doubles_used', monotonic: true },
-  { key: 'wall_games', monotonic: true },
-  { key: 'four_player_games', monotonic: true },
-  { key: 'six_color_games', monotonic: true },
-  { key: 'big_board_games', monotonic: true },
-  { key: 'full_clears', monotonic: true }
-];
+const STATS = Object.freeze({
+  games_played: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas jugadas' },
+  human_wins: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas ganadas por un humano' },
+  hard_wins: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'victorias contra IA difícil' },
+  best_capture: { tipo: TIPO_STAT.MEJOR_MARCA, unidad: 'casillas capturadas en un turno' },
+  best_score: { tipo: TIPO_STAT.MEJOR_MARCA, unidad: 'puntos en una partida' },
+  cells_captured: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'casillas capturadas' },
+  turns_played: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'turnos jugados' },
+  wasted_turns: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'turnos sin capturar casillas' },
+  powerups_taken: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'power-ups recogidos' },
+  bombs_used: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'bombas usadas' },
+  freezes_used: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'congelaciones usadas' },
+  steals_used: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'robos usados' },
+  doubles_used: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'turnos dobles usados' },
+  wall_games: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas con muros' },
+  four_player_games: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas de 4 jugadores' },
+  six_color_games: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas con 6 colores' },
+  big_board_games: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'partidas en tablero grande' },
+  full_clears: { tipo: TIPO_STAT.TOTAL_ACUMULADO, unidad: 'tableros completos de un solo color' }
+});
 
 const ACHIEVEMENTS = [
   { id: 'first_game', when: (s) => s.games_played >= 1 },
@@ -50,16 +50,16 @@ function store() {
 
 function emptyStats() {
   const stats = {};
-  for (const entry of STATS) stats[entry.key] = 0;
+  for (const key of Object.keys(STATS)) stats[key] = 0;
   return stats;
 }
 
 function statsFromSave(save) {
   const stats = emptyStats();
   if (!save || typeof save !== 'object') return stats;
-  for (const entry of STATS) {
-    const num = save[entry.key];
-    if (typeof num === 'number' && Number.isFinite(num)) stats[entry.key] = num;
+  for (const key of Object.keys(STATS)) {
+    const num = save[key];
+    if (typeof num === 'number' && Number.isFinite(num)) stats[key] = num;
   }
   return stats;
 }

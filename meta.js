@@ -1,8 +1,12 @@
 
+var FASE = Object.freeze({ IDEA: 1, DEFINICION: 2, DISENO: 3, CONSTRUCCION: 4, VALIDACION: 5, LANZAMIENTO_Y_MANTENIMIENTO: 6, DESCARTADA: 7 });
+var ESTADO_FASE = Object.freeze({ PENDIENTE: 0, EN_CURSO: 1, BLOQUEADA: 2, EN_REVISION: 3, COMPLETADA: 4 });
+var TIPO_STAT = Object.freeze({ TOTAL_ACUMULADO: 'total_acumulado', MEJOR_MARCA: 'mejor_marca', VALOR_ACTUAL: 'valor_actual' });
+
 var PROYECTO = {
   objetivo: 'En algún momento pensé que era una buena idea, pero tal vez te sirva de inspiración.',
-  fase: 7,
-  fase_estado: 4,
+  fase: FASE.DESCARTADA,
+  fase_estado: ESTADO_FASE.COMPLETADA,
   fases_completadas: 2
 };
 
@@ -12,12 +16,26 @@ function proyectoInt(n, lo, hi) {
   return typeof n === 'number' && Number.isInteger(n) && n >= lo && n <= hi;
 }
 
+function enumValido(enumeracion, valor) {
+  return Object.values(enumeracion).indexOf(valor) !== -1;
+}
+
+function statConservaMaximo(tipo) {
+  return tipo === TIPO_STAT.TOTAL_ACUMULADO || tipo === TIPO_STAT.MEJOR_MARCA;
+}
+
+function statsDeclarados(stats) {
+  if (Array.isArray(stats)) return stats;
+  if (!stats || typeof stats !== 'object') return [];
+  return Object.keys(stats).map(function (key) { return { key: key, tipo: stats[key] && stats[key].tipo }; });
+}
+
 function metaProyecto(p) {
   try {
     if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
     var o = p.objetivo;
     if (typeof o !== 'string' || !o.trim() || Array.from(o).length > 140) return null;
-    if (!proyectoInt(p.fase, 1, 7) || !proyectoInt(p.fase_estado, 0, 4) || !proyectoInt(p.fases_completadas, 0, 6)) return null;
+    if (!enumValido(FASE, p.fase) || !enumValido(ESTADO_FASE, p.fase_estado) || !proyectoInt(p.fases_completadas, 0, FASE.LANZAMIENTO_Y_MANTENIMIENTO)) return null;
     return { objetivo: o, fase: p.fase, fase_estado: p.fase_estado, fases_completadas: p.fases_completadas };
   } catch (e) {
     return null;
@@ -54,7 +72,7 @@ function storage() {
 }
 
 function metaDeclare(list) {
-  declaredStats = Array.isArray(list) ? list.slice(0, 20) : [];
+  declaredStats = statsDeclarados(list).slice(0, 20);
 }
 
 function plainVersion(version) {
@@ -84,7 +102,7 @@ function declaredEntries() {
     if (entries.some((entry) => entry.key === key)) continue;
     entries.push({
       key,
-      monotonic: !!(item && typeof item === 'object' && item.monotonic)
+      tipo: item && typeof item === 'object' ? item.tipo : undefined
     });
   }
   return entries;
@@ -99,7 +117,7 @@ function mergeStats(prevStats, incoming) {
     const hasNew = Object.prototype.hasOwnProperty.call(next, entry.key)
       && typeof next[entry.key] === 'number'
       && Number.isFinite(next[entry.key]);
-    if (hasNew && entry.monotonic && oldNum !== undefined) stats[entry.key] = Math.max(oldNum, next[entry.key]);
+    if (hasNew && statConservaMaximo(entry.tipo) && oldNum !== undefined) stats[entry.key] = Math.max(oldNum, next[entry.key]);
     else if (hasNew) stats[entry.key] = next[entry.key];
     else if (oldNum !== undefined) stats[entry.key] = oldNum;
   }

@@ -166,7 +166,7 @@ describe('meta.v1 migration', { concurrency: false }, () => {
       big_board_games: 0,
       full_clears: 4
     });
-    assert.deepEqual(Object.keys(record.stats), plain(STATS).map((entry) => entry.key));
+    assert.deepEqual(Object.keys(record.stats), Object.keys(STATS));
     assert.deepEqual(plain(record.logros), [
       'big_wave',
       'first_game',
@@ -263,7 +263,7 @@ describe('meta.v1 migration', { concurrency: false }, () => {
 
   test('the helper writes at most 20 declared stats, in declared order', () => {
     const declared = [];
-    for (let i = 0; i < 21; i += 1) declared.push({ key: `stat_${i}`, monotonic: false });
+    for (let i = 0; i < 21; i += 1) declared.push({ key: `stat_${i}`, tipo: 'valor_actual' });
     metaDeclare(declared);
     const stats = { undeclared: 99 };
     declared.forEach((entry, index) => {
@@ -281,8 +281,8 @@ describe('meta.v1 migration', { concurrency: false }, () => {
 
   test('monotonic stats keep the higher value and other stats replace', () => {
     metaDeclare([
-      { key: 'games_played', monotonic: true },
-      { key: 'mood', monotonic: false }
+      { key: 'games_played', tipo: 'total_acumulado' },
+      { key: 'mood', tipo: 'valor_actual' }
     ]);
     metaUpdate(SLUG, APP_VERSION, { stats: { games_played: 5, mood: 3 }, logros: [] });
     metaReset();
