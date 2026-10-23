@@ -283,6 +283,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="rulesOv"><div class="overlay-card" id="rulesCard"></div></div>
 <div class="overlay" id="aboutOv"><div class="overlay-card" id="aboutCard"></div></div>
 
+<script src="meta.js?v=1.0.1"></script>
+<script src="progress.js?v=1.0.1"></script>
 <script>
 // Tablero base (no cambia); owner[r][c] = índice de jugador o -1 si libre
 const PALETTE=['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22'];
@@ -317,6 +319,7 @@ function startG(){
   G.specialEnabled=document.getElementById('specialToggle').checked;
   G.wallPct=parseInt(document.querySelector('input[name=wdens]:checked')?.value||'8');
   G.wallCount=0;
+  G.bestFlood=0;G.wasted=0;G.powerups=0;G.bombs=0;G.freezes=0;G.steals=0;G.doubles=0;
   G.players=[];
   for(let i=0;i<n;i++){
     const nm=document.getElementById(`pn${i}`)?.value.trim()||`Jugador ${i+1}`;
@@ -538,12 +541,16 @@ async function processPowerups(pIdx,puList){
     G.powerupType[pu.r][pu.c]=null;
 
     if(pu.type==='bomb'){
+      G.bombs++;
       await doBomb(pIdx);
     }else if(pu.type==='freeze'){
+      G.freezes++;
       doFreeze(pIdx);
     }else if(pu.type==='steal'){
+      G.steals++;
       await doSteal(pIdx);
     }else if(pu.type==='double'){
+      G.doubles++;
       doDouble(pIdx);
     }
   }
@@ -734,6 +741,8 @@ async function processTurn(color){
 
   // Track total captured (for end screen scoring)
   player.totalCaptured+=res.n;
+  if(res.n>G.bestFlood)G.bestFlood=res.n;
+  if(res.powerups.length)G.powerups+=res.powerups.length;
 
   // Wave-by-wave animation
   if(res.waves&&res.waves.length>0){
@@ -770,7 +779,7 @@ async function processTurn(color){
   }
 
   // avanzar / terminar
-  if(res.n===0){G.stall++}else{G.stall=0}
+  if(res.n===0){G.stall++;G.wasted++}else{G.stall=0}
 
   const unclaimed=countUnclaimed();
   G.curP=(G.curP+1)%G.players.length;
@@ -936,10 +945,12 @@ function showScorePop(cell,n,color){
 
 // ===================== END =====================
 function endGame(){
-  G.over=true;showS('end');
+  G.over=true;
   updateTerritory();
+  saveFinishedMatch();
+  showS('end');
   // Use totalCaptured for ranking (includes bomb bonus)
-  const sorted=[...G.players].sort((a,b)=>b.totalCaptured!==a.totalCaptured?b.totalCaptured-a.totalCaptured:b.big-a.big);
+  const sorted=rankPlayers(G.players);
   const medals=['🥇','🥈','🥉','4️⃣'];
   const playable=countPlayable();
   document.getElementById('endRank').innerHTML=sorted.map((p,i)=>`<div class="end-rank ${i===0?'w':''}"><span class="er-pos">${medals[i]}</span><span class="er-name" style="color:${p.color}">${p.name}</span><span class="er-score">${p.totalCaptured} casillas (${Math.round(p.totalCaptured/playable*100)}%)</span><div class="end-score-breakdown">Mejor jugada: +${p.big} · Capturas: ${p.totalCaptured}</div></div>`).join('');
@@ -1043,6 +1054,31 @@ function spawnConfetti(){
     setTimeout(()=>c.remove(),5000);
   }
 }
+function saveFinishedMatch(){
+  try{
+    recordMatch({
+      players:G.players.map(p=>({type:p.type,totalCaptured:p.totalCaptured,big:p.big})),
+      turns:G.turns,
+      wasted:G.wasted,
+      powerups:G.powerups,
+      bombs:G.bombs,
+      freezes:G.freezes,
+      steals:G.steals,
+      doubles:G.doubles,
+      bestFlood:G.bestFlood,
+      colors:G.colors,
+      cols:G.cols,
+      rows:G.rows,
+      wallCount:G.wallCount,
+      unclaimed:countUnclaimed()
+    });
+    queueMetaUpdate();
+  }catch{
+    // A storage failure must still leave the results on screen.
+  }
+}
+
+backfillMeta();
 renderPS(2);
 </script>
 </body>
