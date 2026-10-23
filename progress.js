@@ -1,6 +1,6 @@
 // Flood-It Party progress. Numbers only; player names stay out of the record.
 
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 const SLUG = 'floodit-party';
 const SAVE_KEY = 'floodit-party.save';
 

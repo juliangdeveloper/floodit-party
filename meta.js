@@ -1,5 +1,46 @@
 // Shared meta.v1 progress record. Same behavior in every app.
 
+// Project status, set by hand and bumped with the version. Never computed from play.
+// fase 1-6: Idea, Definición, Diseño, Construcción, Validación, Lanzamiento y mantenimiento.
+// fase_estado 0-4: pendiente, en curso, bloqueada, en revisión, completada.
+var PROYECTO = {
+  objetivo: 'Juego de fiesta por turnos de inundar colores, con muros y power-ups, para 2 a 4 jugadores humanos o IA.',
+  fase: 6,
+  fase_estado: 1,
+  fases_completadas: 5
+};
+
+var proyectoSource = PROYECTO;
+
+function proyectoInt(n, lo, hi) {
+  return typeof n === 'number' && Number.isInteger(n) && n >= lo && n <= hi;
+}
+
+// Clean copy of a proyecto block, or null when any field is missing or out of range.
+function metaProyecto(p) {
+  try {
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+    var o = p.objetivo;
+    if (typeof o !== 'string' || !o.trim() || Array.from(o).length > 140) return null;
+    if (!proyectoInt(p.fase, 1, 6) || !proyectoInt(p.fase_estado, 0, 4) || !proyectoInt(p.fases_completadas, 0, 6)) return null;
+    return { objetivo: o, fase: p.fase, fase_estado: p.fase_estado, fases_completadas: p.fases_completadas };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Tests only: swap the block the writer uses (null restores PROYECTO).
+function metaSetProyecto(p) {
+  proyectoSource = p === null ? PROYECTO : p;
+}
+
+// Adds the current proyecto block to a record being written, when it is valid.
+function withProyecto(record) {
+  var p = metaProyecto(proyectoSource);
+  if (p) record.proyecto = p;
+  return record;
+}
+
 function metaKey(slug) {
   return `meta.v1.${slug}`;
 }
@@ -144,7 +185,7 @@ function commitWrite(job) {
   const store = storage();
   if (!store) return null;
   try {
-    const record = buildRecord(job.slug, job.version, job.prev, job.payload);
+    const record = withProyecto(buildRecord(job.slug, job.version, job.prev, job.payload));
     store.setItem(job.key, JSON.stringify(record));
     lastWriteAt = Date.now();
     postRecord(job.key, record);
