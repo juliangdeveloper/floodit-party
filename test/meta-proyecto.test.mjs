@@ -14,7 +14,7 @@ const context = createContext(sandbox);
 for (const name of ['meta.js', 'progress.js']) {
   runInContext(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'), context, { filename: name });
 }
-const { metaKey, metaUpdate, metaReset, metaDeclare, metaProyecto, metaSetProyecto, PROYECTO, SLUG, STATS, backfillMeta } = sandbox;
+const { metaKey, metaUpdate, metaReset, metaDeclare, metaProyecto, metaSetProyecto, PROYECTO, FASE, TIPO_PROYECTO, SLUG, STATS, backfillMeta } = sandbox;
 const KEY = metaKey(SLUG);
 const plain = (v) => JSON.parse(JSON.stringify(v));
 
@@ -111,4 +111,78 @@ test('a stored record with a different proyecto gets the current block on the ne
 test('fase 7 (Descartada) is accepted', () => {
   const D = { ...PROYECTO, fase: 7, fase_estado: 4 };
   assert.deepEqual(plain(metaProyecto(D)), plain(D));
+});
+
+test('tipo is optional, independent of fase, and must be a TIPO_PROYECTO value', () => {
+  assert.strictEqual('tipo' in metaProyecto(Object.assign({}, PROYECTO, { tipo: undefined })), false);
+  for (const tipo of Object.values(TIPO_PROYECTO)) {
+    for (const fase of Object.values(FASE)) {
+      const p = Object.assign({}, PROYECTO, { fase, tipo });
+      assert.deepStrictEqual(plain(metaProyecto(p)), p);
+    }
+  }
+  for (const tipo of ['', 'Proyecto', 'otro', 1, null, {}, []]) {
+    assert.strictEqual(metaProyecto(Object.assign({}, PROYECTO, { tipo })), null);
+  }
+});
+
+test('a stored proyecto with an invalid tipo is tolerated and replaced on the next write', () => {
+  const old = {
+    v: 1, slug: SLUG, version: '1.0.3', updatedAt: '2026-01-01T00:00:00.000Z',
+    stats: {}, logros: ['first_game'], hitos: { first_game: '2026-01-01T00:00:00.000Z' },
+    proyecto: { extra: 1, objetivo: 'Objetivo anterior.', fase: 2, fase_estado: 3, fases_completadas: 1, tipo: 'no_vale' }
+  };
+  const map = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  const rec = JSON.parse(map.get(KEY));
+  assert.deepEqual(rec.proyecto, plain(PROYECTO));
+  assert.equal(rec.hitos.first_game, '2026-01-01T00:00:00.000Z');
+  assert.equal(map.has(`${KEY}.corrupt`), false);
+
+  metaSetProyecto(Object.assign({}, PROYECTO, { tipo: 'no_vale' }));
+  const second = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  assert.equal('proyecto' in JSON.parse(second.get(KEY)), false);
+});
+
+test('an old record without tipo gains a valid tipo on the next write and keeps stats and hitos', () => {
+  metaSetProyecto(Object.assign({}, PROYECTO, { tipo: TIPO_PROYECTO.RECURSO }));
+  const old = {
+    v: 1, slug: SLUG, version: '1.0.3', updatedAt: '2026-01-01T00:00:00.000Z',
+    stats: { games_played: 7 }, logros: ['first_game'], hitos: { first_game: '2026-01-01T00:00:00.000Z' },
+    proyecto: { extra: 1, objetivo: 'Objetivo anterior.', fase: 2, fase_estado: 3, fases_completadas: 1 }
+  };
+  const map = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  const rec = JSON.parse(map.get(KEY));
+  assert.deepEqual(rec.proyecto, plain(Object.assign({}, PROYECTO, { tipo: 'recurso' })));
+  assert.equal(rec.hitos.first_game, '2026-01-01T00:00:00.000Z');
+  assert.equal(map.has(`${KEY}.corrupt`), false);
+  assert.strictEqual(rec.stats.games_played, 7);
+
+  metaSetProyecto({ fase: 9 });
+  const second = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  assert.equal('proyecto' in JSON.parse(second.get(KEY)), false);
+});
+
+test('the written proyecto block carries tipo proyecto', () => {
+  const old = {
+    v: 1, slug: SLUG, version: '1.0.3', updatedAt: '2026-01-01T00:00:00.000Z',
+    stats: {}, logros: ['first_game'], hitos: { first_game: '2026-01-01T00:00:00.000Z' },
+    proyecto: { extra: 1, objetivo: 'Objetivo anterior.', fase: 2, fase_estado: 3, fases_completadas: 1 }
+  };
+  const map = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  const rec = JSON.parse(map.get(KEY));
+  assert.strictEqual(PROYECTO.tipo, TIPO_PROYECTO.PROYECTO);
+  assert.strictEqual(rec.proyecto.tipo, 'proyecto');
+  assert.deepEqual(rec.proyecto, plain(PROYECTO));
+  assert.equal(rec.hitos.first_game, '2026-01-01T00:00:00.000Z');
+  assert.equal(map.has(`${KEY}.corrupt`), false);
+
+  metaSetProyecto({ fase: 9 });
+  const second = useStorage({ [KEY]: JSON.stringify(old) });
+  metaUpdate(SLUG, '9.9.9', { stats: {}, logros: [] });
+  assert.equal('proyecto' in JSON.parse(second.get(KEY)), false);
 });
