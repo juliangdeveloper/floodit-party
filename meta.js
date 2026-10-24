@@ -8,7 +8,8 @@ var PROYECTO = {
   objetivo: 'En algún momento pensé que era una buena idea, pero tal vez te sirva de inspiración.',
   fase: FASE.DESCARTADA,
   fase_estado: ESTADO_FASE.COMPLETADA,
-  fases_completadas: 2
+  fases_completadas: 2,
+  tipo: TIPO_PROYECTO.PROYECTO
 };
 
 var proyectoSource = PROYECTO;
