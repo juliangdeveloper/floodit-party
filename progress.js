@@ -1,5 +1,5 @@
 
-const APP_VERSION = '1.0.9';
+const APP_VERSION = '1.0.10';
 const SLUG = 'floodit-party';
 const SAVE_KEY = 'floodit-party.save';
 
