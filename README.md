@@ -19,6 +19,7 @@ Flood-It es NP-difícil: [Clifford, Jalsenius, Montanaro y Sach, *The Complexity
 
 ## Stack
 Un solo `index.html` con HTML, CSS y JavaScript vanilla. Sin dependencias ni servidor.
+Al abrirse guarda el progreso en `localStorage` (`meta.v1.floodit-party`), que lee el [portafolio](https://juliangdeveloper.github.io/).
 
 ## Otros juegos de fiesta
 - 💥 [Clickomania Party](https://github.com/juliangdeveloper/clickomania-party) · [jugar](https://juliangdeveloper.github.io/clickomania-party/)
