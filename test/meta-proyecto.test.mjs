@@ -118,7 +118,7 @@ test('tipo is optional, independent of fase, and must be a TIPO_PROYECTO value',
   for (const tipo of Object.values(TIPO_PROYECTO)) {
     for (const fase of Object.values(FASE)) {
       const p = Object.assign({}, PROYECTO, { fase, tipo });
-      assert.deepStrictEqual(plain(metaProyecto(p)), p);
+      assert.deepStrictEqual(plain(metaProyecto(p)), plain(p));
     }
   }
   for (const tipo of ['', 'Proyecto', 'otro', 1, null, {}, []]) {
