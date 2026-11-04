@@ -337,30 +337,6 @@ describe('meta.v1 migration', { concurrency: false }, () => {
     assert.equal(JSON.parse(sandbox.localStorage.getItem(META_KEY)).stats.games_played, 3);
   });
 
-  test('demo and preview modes do not write or postMessage', () => {
-    const messages = [];
-    sandbox.window = {
-      parent: {
-        postMessage() {
-          messages.push('meta');
-        }
-      }
-    };
-    for (const search of ['?demo=1', '?preview=1']) {
-      installStorage();
-      metaReset();
-      messages.length = 0;
-      sandbox.location = { origin: 'https://juliangdeveloper.github.io', search };
-      sandbox.localStorage.setItem(SAVE_KEY, JSON.stringify({ games_played: 3 }));
-      assert.equal(backfillMeta(), null);
-      assert.equal(metaUpdate(SLUG, APP_VERSION, { stats: { games_played: 3 }, logros: ['first_game'] }), null);
-      metaFlush();
-      assert.equal(sandbox.localStorage.getItem(META_KEY), null);
-      assert.equal(messages.length, 0);
-      assert.equal(sandbox.localStorage.getItem(SAVE_KEY), JSON.stringify({ games_played: 3 }));
-    }
-  });
-
   test('old save keys stay byte-identical after load and play', () => {
     const rawSave = JSON.stringify({ legacy_note: 'keep', games_played: 1, blob: 'y'.repeat(4000) });
     const other = '{"score":1,"photo":"abc"}';

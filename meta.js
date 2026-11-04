@@ -11,13 +11,9 @@ var PROYECTO = {
   fases_completadas: 2,
   tipo: TIPO_PROYECTO.PROYECTO,
   aportes: [
-    { id: 'programacion', aporte: 2, fuente: 'creacion' },
-    { id: 'juegos', aporte: 2, fuente: 'creacion' },
-    { id: 'algoritmos', aporte: 2, fuente: 'creacion' },
-    { id: 'matematicas', aporte: 1, fuente: 'creacion' },
-    { id: 'logica', aporte: 2, fuente: 'uso' },
-    { id: 'estrategia', aporte: 2, fuente: 'uso' },
-    { id: 'perseverancia', aporte: 1, fuente: 'uso' }
+    { stat: 'Programación', exp: 5, fuente: 'creacion' },
+    { stat: 'Diseño', exp: 9, fuente: 'creacion' },
+    { stat: 'Planificación', exp: 20, fuente: 'uso' }
   ]
 };
 
@@ -41,25 +37,27 @@ function statsDeclarados(stats) {
   return Object.keys(stats).map(function (key) { return { key: key, tipo: stats[key] && stats[key].tipo }; });
 }
 
+var APORTE_STAT_MAX = 32;
+var APORTE_EXP_MAX = 99;
+
 function aportesValidos(lista) {
   if (!Array.isArray(lista)) return null;
   var out = [];
   var seen = {};
-  var i;
-  for (i = 0; i < lista.length; i++) {
+  for (var i = 0; i < lista.length; i++) {
     var it = lista[i];
     if (!it || typeof it !== 'object' || Array.isArray(it)) return null;
-    var id = it.id;
+    var stat = it.stat;
+    var exp = it.exp;
     var fuente = it.fuente;
-    var aporte = it.aporte;
-    if (typeof id !== 'string' || !/^[a-z][a-z0-9]*$/.test(id)) return null;
+    if (typeof stat !== 'string' || !stat.trim() || stat !== stat.trim() || Array.from(stat).length > APORTE_STAT_MAX) return null;
     if (fuente !== 'creacion' && fuente !== 'uso') return null;
-    if (!proyectoInt(aporte, 1, 3)) return null;
-    var key = id + '\n' + fuente;
+    if (!(proyectoInt(exp, 1, APORTE_EXP_MAX))) return null;
+    var key = stat + '\n' + fuente;
     if (seen[key]) return null;
     if (Object.keys(it).length !== 3) return null;
     seen[key] = true;
-    out.push({ id: id, aporte: aporte, fuente: fuente });
+    out.push({ stat: stat, exp: exp, fuente: fuente });
   }
   return out;
 }
@@ -87,6 +85,36 @@ function metaProyecto(p) {
 
 function metaSetProyecto(p) {
   proyectoSource = p === null ? PROYECTO : p;
+}
+
+function metaDeclararProyecto(slug, version) {
+  try {
+    var store = globalThis.localStorage;
+    if (!store || !slug) return null;
+    var clave = 'meta.v1.' + slug;
+    var raw = store.getItem(clave);
+    var base = null;
+    if (raw != null && raw !== '') {
+      try {
+        var previo = JSON.parse(raw);
+        if (previo && typeof previo === 'object' && !Array.isArray(previo) && previo.v === 1 && previo.slug === slug) base = previo;
+      } catch (e) {
+        base = null;
+      }
+      if (!base) store.setItem(clave + '.corrupt', String(raw));
+    }
+    if (!base) base = { v: 1, slug: slug, version: String(version == null ? '' : version).replace(/^[vV]/, ''), updatedAt: new Date().toISOString(), stats: {}, logros: [], hitos: {} };
+    var p = metaProyecto(proyectoSource);
+    if (p) base.proyecto = p;
+    var texto = JSON.stringify(base);
+    if (texto !== raw) {
+      store.setItem(clave, texto);
+      if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage({ type: 'meta', key: clave, data: base }, location.origin);
+    }
+    return base;
+  } catch (e) {
+    return null;
+  }
 }
 
 function withProyecto(record) {
@@ -122,18 +150,6 @@ function plainVersion(version) {
   const text = String(version == null ? '' : version).trim();
   if (text.charAt(0) === 'v' || text.charAt(0) === 'V') return text.slice(1);
   return text;
-}
-
-function metaIsDemo() {
-  try {
-    const loc = globalThis.location;
-    const search = loc && typeof loc.search === 'string' ? loc.search : '';
-    if (!search) return false;
-    const params = new URLSearchParams(search);
-    return params.get('demo') === '1' || params.get('preview') === '1';
-  } catch {
-    return false;
-  }
 }
 
 function declaredEntries() {
@@ -222,7 +238,6 @@ function buildRecord(slug, version, prev, payload) {
 
 function postRecord(key, record) {
   try {
-    if (metaIsDemo()) return;
     const frame = globalThis.window;
     if (frame && frame.parent && frame.parent !== frame) {
       frame.parent.postMessage({ type: 'meta', key, data: record }, globalThis.location.origin);
@@ -232,7 +247,6 @@ function postRecord(key, record) {
 }
 
 function commitWrite(job) {
-  if (metaIsDemo()) return null;
   const store = storage();
   if (!store) return null;
   try {
@@ -264,7 +278,7 @@ function armWrite(delay) {
   if (writeTimer) return;
   writeTimer = setTimeout(() => {
     writeTimer = null;
-    if (!pendingWrite || metaIsDemo()) {
+    if (!pendingWrite) {
       pendingWrite = null;
       return;
     }
@@ -279,7 +293,6 @@ function armWrite(delay) {
 }
 
 function enqueue(slug, version, payload, prev) {
-  if (metaIsDemo()) return null;
   const job = { slug, version, payload, prev, key: metaKey(slug) };
   if (writeDue()) {
     clearWriteTimer();
@@ -294,7 +307,6 @@ function enqueue(slug, version, payload, prev) {
 function metaUpdate(slug, version, payload) {
   try {
     bindFlush();
-    if (metaIsDemo()) return null;
     const store = storage();
     if (!store) return null;
     const raw = store.getItem(metaKey(slug));
@@ -310,7 +322,6 @@ function metaUpdate(slug, version, payload) {
 function metaBackfill(slug, version, build) {
   try {
     bindFlush();
-    if (metaIsDemo()) return null;
     const store = storage();
     if (!store) return null;
     const key = metaKey(slug);
@@ -331,11 +342,6 @@ function metaBackfill(slug, version, build) {
 
 function metaFlush() {
   try {
-    if (metaIsDemo()) {
-      pendingWrite = null;
-      clearWriteTimer();
-      return null;
-    }
     if (!pendingWrite) return null;
     clearWriteTimer();
     const job = pendingWrite;
