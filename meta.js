@@ -9,7 +9,16 @@ var PROYECTO = {
   fase: FASE.DESCARTADA,
   fase_estado: ESTADO_FASE.COMPLETADA,
   fases_completadas: 2,
-  tipo: TIPO_PROYECTO.PROYECTO
+  tipo: TIPO_PROYECTO.PROYECTO,
+  aportes: [
+    { id: 'programacion', aporte: 2, fuente: 'creacion' },
+    { id: 'juegos', aporte: 2, fuente: 'creacion' },
+    { id: 'algoritmos', aporte: 2, fuente: 'creacion' },
+    { id: 'matematicas', aporte: 1, fuente: 'creacion' },
+    { id: 'logica', aporte: 2, fuente: 'uso' },
+    { id: 'estrategia', aporte: 2, fuente: 'uso' },
+    { id: 'perseverancia', aporte: 1, fuente: 'uso' }
+  ]
 };
 
 var proyectoSource = PROYECTO;
@@ -32,6 +41,29 @@ function statsDeclarados(stats) {
   return Object.keys(stats).map(function (key) { return { key: key, tipo: stats[key] && stats[key].tipo }; });
 }
 
+function aportesValidos(lista) {
+  if (!Array.isArray(lista)) return null;
+  var out = [];
+  var seen = {};
+  var i;
+  for (i = 0; i < lista.length; i++) {
+    var it = lista[i];
+    if (!it || typeof it !== 'object' || Array.isArray(it)) return null;
+    var id = it.id;
+    var fuente = it.fuente;
+    var aporte = it.aporte;
+    if (typeof id !== 'string' || !/^[a-z][a-z0-9]*$/.test(id)) return null;
+    if (fuente !== 'creacion' && fuente !== 'uso') return null;
+    if (!proyectoInt(aporte, 1, 3)) return null;
+    var key = id + '\n' + fuente;
+    if (seen[key]) return null;
+    if (Object.keys(it).length !== 3) return null;
+    seen[key] = true;
+    out.push({ id: id, aporte: aporte, fuente: fuente });
+  }
+  return out;
+}
+
 function metaProyecto(p) {
   try {
     if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
@@ -41,6 +73,12 @@ function metaProyecto(p) {
     if (p.tipo !== undefined && !enumValido(TIPO_PROYECTO, p.tipo)) return null;
     var bloque = { objetivo: o, fase: p.fase, fase_estado: p.fase_estado, fases_completadas: p.fases_completadas };
     if (p.tipo !== undefined) bloque.tipo = p.tipo;
+    if (p.bloqueada === true) bloque.bloqueada = true;
+    if (p.aportes !== undefined) {
+      var aportes = aportesValidos(p.aportes);
+      if (!aportes) return null;
+      bloque.aportes = aportes;
+    }
     return bloque;
   } catch (e) {
     return null;
