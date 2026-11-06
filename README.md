@@ -18,7 +18,7 @@
 Flood-It es NP-difícil: [Clifford, Jalsenius, Montanaro y Sach, *The Complexity of Flood Filling Games* (arXiv:1001.4420)](https://arxiv.org/abs/1001.4420). El botón 📄 del juego lo resume.
 
 ## Stack
-Un solo `index.html` con HTML, CSS y JavaScript vanilla. Sin dependencias ni servidor.
+`index.html` con HTML, CSS y JavaScript vanilla, más `meta.js` y `progress.js` para el progreso guardado en el navegador. Sin dependencias ni servidor. Tests con `node --test`.
 Al abrirse guarda el progreso en `localStorage` (`meta.v1.floodit-party`), que lee el [portafolio](https://juliangdeveloper.github.io/).
 
 ## Otros juegos de fiesta
